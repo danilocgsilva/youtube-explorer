@@ -5,11 +5,12 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Services\Fetch;
 
 final class FetchController extends AbstractController
 {
     #[Route('/fetch/{channelHash}', name: 'app_fetch')]
-    public function index(string $channelHash): JsonResponse
+    public function index(string $channelHash, Fetch $fetch): JsonResponse
     {
         $googleCloudApiKey = $this->getParameter('google_cloud_api_key');
         $apiAddress = "https://www.googleapis.com/youtube/v3/search";

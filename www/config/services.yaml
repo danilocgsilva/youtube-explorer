@@ -21,5 +21,13 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Services\Fetch:
+        arguments:
+            $apiKey: '%env(GOOGLE_CLOUD_API_KEY)%'
+            $httpClient: '@guzzle_http.client'
+
+    guzzle_http.client:
+        class: GuzzleHttp\Client
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
