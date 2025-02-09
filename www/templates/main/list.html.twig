@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    List of videos
+{% endblock %}
+
+{% block h1_header %}Result list{% endblock %}
+
+{% block body %}
+
+    <ul>
+        {% for video_name in videos_list %}
+            <li>
+                {{ video_name }}
+            </li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
