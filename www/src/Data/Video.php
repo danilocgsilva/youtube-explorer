@@ -11,6 +11,7 @@ class Video
     public function __construct(
         public readonly string $videoTitle,
         public readonly DateTime $publishTime,
-        public readonly string $publishTimeString
+        public readonly string $publishTimeString,
+        public readonly string $videoId
     ) {}
 }

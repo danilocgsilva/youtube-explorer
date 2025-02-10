@@ -20,7 +20,7 @@
     <ul>
         {% for video in videos_list.videosList %}
             <li>
-                {{ video.videoTitle }} - {{ video.publishTimeString }}
+                {% include "movie_template.html.twig" %}
             </li>
         {% endfor %}
     </ul>

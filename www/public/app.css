@@ -1,0 +1,13 @@
+.container {
+    margin: 2rem;
+}
+body {
+    display: flex;
+    justify-content: center;
+}
+.video-data-entry {
+    text-indent: 2rem;;
+}
+a {
+    text-decoration: underline;
+}

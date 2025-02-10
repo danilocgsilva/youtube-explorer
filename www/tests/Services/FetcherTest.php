@@ -72,7 +72,8 @@ class FetcherTest extends TestCase
                         "title" => "Video title"
                     ],
                     "contentDetails" => [
-                        "videoPublishedAt" => "2025-02-10T14:08:48Z"
+                        "videoPublishedAt" => "2025-02-10T14:08:48Z",
+                        "videoId" => "abc_XYZ_0123"
                     ]
                 ]
             ]

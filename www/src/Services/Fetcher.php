@@ -39,7 +39,8 @@ class Fetcher
                 $item->snippet->title,
                 
                DateTime::createFromFormat("Y-m-d\TH:i:s\Z", $item->contentDetails->videoPublishedAt),
-               $item->contentDetails->videoPublishedAt
+               $item->contentDetails->videoPublishedAt,
+               $item->contentDetails->videoId
             );
         }
 
@@ -60,6 +61,7 @@ class Fetcher
     {
         $pagination = 50;
         $urlToPaylist = sprintf(
+            // 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails,statistics,fileDetails&maxResults=%s&playlistId=%s&key=%s',
             'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=%s&playlistId=%s&key=%s',
             $pagination,
             $uploadsId,
