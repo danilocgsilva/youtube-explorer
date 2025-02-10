@@ -18,18 +18,6 @@ class Fetcher
     public function __construct(private string $apiKey, private WebClientInterface $httpClient)
     {
     }
-    
-    public function getByUploadsIds(string $uploadsId): string
-    {
-        $pagination = 50;
-        $urlToPaylist = sprintf(
-            'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=%s&playlistId=%s&key=%s',
-            $pagination,
-            $uploadsId,
-            $this->apiKey
-        );
-        return $this->httpClient->getContentString($urlToPaylist);
-    }
 
     public function fetch(string $uploadsId): self
     {
@@ -54,5 +42,17 @@ class Fetcher
             $this->titlesList,
             $this->channelName
         );
+    }
+
+    private function getByUploadsIds(string $uploadsId): string
+    {
+        $pagination = 50;
+        $urlToPaylist = sprintf(
+            'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=%s&playlistId=%s&key=%s',
+            $pagination,
+            $uploadsId,
+            $this->apiKey
+        );
+        return $this->httpClient->getContentString($urlToPaylist);
     }
 }

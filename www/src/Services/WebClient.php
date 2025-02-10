@@ -5,10 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Client as HttpClient;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 
 class WebClient implements WebClientInterface
@@ -26,6 +22,8 @@ class WebClient implements WebClientInterface
     {
         $contentFetched = $this->webClient->request("GET", $url);
         $contentString = $contentFetched->getBody()->getContents();
+        $this->logger->info($contentString);
+
         return $contentString;
     }
 }
