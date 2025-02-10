@@ -27,7 +27,12 @@ class WebClient implements ClientInterface
      */
     public function send(RequestInterface $request, array $options = []): ResponseInterface
     {
-        return $this->webClient->send($request, $options);
+        $fetchedContent = $this->webClient->send($request, $options);
+
+        $logContent = json_decode($fetchedContent->getBody()->getContents());
+        $this->logger->info($logContent);
+
+        return $fetchedContent;
     }
 
     /**
@@ -43,7 +48,14 @@ class WebClient implements ClientInterface
      */
     public function request(string $method, $uri, array $options = []): ResponseInterface
     {
-        return $this->webClient->request($method, $uri, $options);
+        $contentFetched = $this->webClient->request($method, $uri, $options);
+
+        // $logContent = json_decode($contentFetched->getBody()->getContents());
+        // $contentFetchedForLog = clone $contentFetched;
+        // $logContentString = $contentFetchedForLog->getBody()->getContents();
+        // $this->logger->info($logContentString);
+
+        return $contentFetched;
     }
 
     /**
