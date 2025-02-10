@@ -4,12 +4,20 @@
     List of videos
 {% endblock %}
 
-{% block h1_header %}Result list{% endblock %}
+{% block h1_header %}
+    Result list
+{% endblock %}
 
 {% block body %}
 
+    <h2>
+        The channel has
+        {{ videos_list.channelVideoCount }}
+        videos.
+    </h2>
+    <hr />
     <ul>
-        {% for video_name in videos_list %}
+        {% for video_name in videos_list.titlesList %}
             <li>
                 {{ video_name }}
             </li>
