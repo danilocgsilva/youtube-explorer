@@ -69,7 +69,8 @@ class FetcherTest extends TestCase
                 [
                     "snippet" => [
                         "channelTitle" => "Channel title",
-                        "title" => "Video title"
+                        "title" => "Video title",
+                        "channelId" => "abc1234_YXZyxz"
                     ],
                     "contentDetails" => [
                         "videoPublishedAt" => "2025-02-10T14:08:48Z",

@@ -10,6 +10,7 @@ class FetcheResult
         public readonly int $channelVideosCount,
         public readonly array $videoTitles,
         public readonly string $channelTitle,
-        public readonly array $videosList
+        public readonly array $videosList,
+        public readonly string $channelId
     ) {}
 }

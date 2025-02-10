@@ -7,20 +7,33 @@ namespace App\Services;
 use App\Data\FetcheResult;
 use Exception;
 use App\Services\WebClientInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\ChannelSearchHistory;
+use DateTime;
+use App\Entity\Channel;
+use App\Repository\ChannelRepository;
 
 class Fetch
 {
     public function __construct(
         private string $apiKey,
-        private WebClientInterface $httpClient
+        private WebClientInterface $httpClient,
+        private EntityManagerInterface $entityManager,
+        private ChannelRepository $channelRepository
     ) {}
 
-    public function fetch(string $youtubeChannel): FetcheResult
+    public function fetch(string $channelSearchTerm): FetcheResult
     {
-        $uploadsId = $this->getUploads($youtubeChannel);
+        $uploadsId = $this->getUploads($channelSearchTerm);
         $fetcher = new Fetcher($this->apiKey, $this->httpClient);
         $fetcher->fetch($uploadsId);
-        return $fetcher->getResults();
+        $results = $fetcher->getResults();
+
+        $this->persist($results, $channelSearchTerm);
+
+        $this->captureChannel($results);
+
+        return $results;
     }
 
     private function getUploads(string $youtubeChannel)
@@ -57,10 +70,35 @@ class Fetch
             $channelName,
             $this->apiKey
         );
-        // $response = $this->httpClient->request("GET", $urlChannelId);
 
         $contents = json_decode($this->httpClient->getContentString($urlChannelId));
 
         return $contents->items[0]->id->channelId;
+    }
+
+    private function persist(FetcheResult $results, string $channelSearchTerm): void
+    {
+        $channelSearchHistory = (new ChannelSearchHistory())
+            ->setChannelId($results->channelId)
+            ->setChannelName($results->channelTitle)
+            ->setSearchTerm($channelSearchTerm)
+            ->setWhenFetched(new DateTime());
+
+        $this->entityManager->persist($channelSearchHistory);
+        $this->entityManager->flush();
+    }
+
+    private function captureChannel(FetcheResult $results)
+    {
+        $found = $this->channelRepository->findOneBy(["channelId" => $results->channelId]);
+
+        if (!$found) {
+            $channel = (new Channel())
+                ->setChannelId($results->channelId)
+                ->setChannelName($results->channelTitle);
+
+            $this->entityManager->persist($channel);
+            $this->entityManager->flush();
+        }
     }
 }

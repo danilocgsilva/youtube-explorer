@@ -19,6 +19,8 @@ class Fetcher
     private int $channelVideoCount;
 
     private string $channelName;
+
+    private string $channelId;
     
     public function __construct(private string $apiKey, private WebClientInterface $httpClient)
     {
@@ -32,6 +34,8 @@ class Fetcher
         $this->channelVideoCount = $contents->pageInfo->totalResults;
 
         $this->channelName = $contents->items[0]->snippet->channelTitle;
+
+        $this->channelId = $contents->items[0]->snippet->channelId;
 
         foreach ($contents->items as $item) {
             $this->titlesList[] = $item->snippet->title;
@@ -53,7 +57,8 @@ class Fetcher
             $this->channelVideoCount,
             $this->titlesList,
             $this->channelName,
-            $this->videosList
+            $this->videosList,
+            $this->channelId
         );
     }
 
@@ -61,7 +66,6 @@ class Fetcher
     {
         $pagination = 50;
         $urlToPaylist = sprintf(
-            // 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails,statistics,fileDetails&maxResults=%s&playlistId=%s&key=%s',
             'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=%s&playlistId=%s&key=%s',
             $pagination,
             $uploadsId,
