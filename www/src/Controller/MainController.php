@@ -15,7 +15,7 @@ final class MainController extends AbstractController
     public function list(Request $request, Fetch $fetch): Response
     {
         /**
-         * @var array
+         * @var \App\Data\FetcheResult
          */
         $videosList = $fetch->fetch($request->get("youtube-channel-id"));
 

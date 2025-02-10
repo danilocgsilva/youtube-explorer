@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Data\FetcheResult;
 use GuzzleHttp\ClientInterface;
 use Exception;
 
@@ -14,15 +15,15 @@ class Fetch
         private ClientInterface $httpClient
     ) {}
 
-    public function fetch(string $youtubeChannel): FetchResults
+    public function fetch(string $youtubeChannel): FetcheResult
     {
         $uploadsId = $this->getUploads($youtubeChannel);
 
-        $resultsFetcher = new FetchResults($this->apiKey, $this->httpClient);
+        $fetcher = new Fetcher($this->apiKey, $this->httpClient);
 
-        $resultsFetcher->fetch($uploadsId);
+        $fetcher->fetch($uploadsId);
 
-        return $resultsFetcher;
+        return $fetcher->getResults();
     }
 
     private function getUploads(string $youtubeChannel)

@@ -10,14 +10,15 @@
 
 {% block body %}
 
-    <h2>
+    <p>Videos from {{ videos_list.channelTitle }}</p>
+    <p>
         The channel has
-        {{ videos_list.channelVideoCount }}
+        {{ videos_list.channelVideosCount }}
         videos.
-    </h2>
+    </p>
     <hr />
     <ul>
-        {% for video_name in videos_list.titlesList %}
+        {% for video_name in videos_list.videoTitles %}
             <li>
                 {{ video_name }}
             </li>

@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Data\FetcheResult;
 use GuzzleHttp\ClientInterface;
 
-class FetchResults
+class Fetcher
 {
     private array $titlesList = [];
 
     private int $channelVideoCount;
+
+    private string $channelName;
     
     public function __construct(private string $apiKey, private ClientInterface $httpClient)
     {
@@ -36,6 +39,8 @@ class FetchResults
 
         $this->channelVideoCount = $contents->pageInfo->totalResults;
 
+        $this->channelName = $contents->items[0]->snippet->channelTitle;
+
         foreach ($contents->items as $item) {
             $this->titlesList[] = $item->snippet->title;
         }
@@ -43,13 +48,12 @@ class FetchResults
         return $this;
     }
 
-    public function getTitlesList(): array
+    public function getResults(): FetcheResult
     {
-        return $this->titlesList;
-    }
-
-    public function getChannelVideoCount(): int
-    {
-        return $this->channelVideoCount;
+        return new FetcheResult(
+            $this->channelVideoCount,
+            $this->titlesList,
+            $this->channelName
+        );
     }
 }
