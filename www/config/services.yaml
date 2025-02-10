@@ -24,10 +24,16 @@ services:
     App\Services\Fetch:
         arguments:
             $apiKey: '%env(GOOGLE_CLOUD_API_KEY)%'
-            $httpClient: '@guzzle_http.client'
+            $httpClient: '@web_client.client'
 
     guzzle_http.client:
         class: GuzzleHttp\Client
+
+    web_client.client:
+        class: App\Services\WebClient
+        arguments:
+            $client: '@guzzle_http.client'
+            $logger: '@logger'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
