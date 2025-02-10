@@ -5,24 +5,21 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\FetcheResult;
-use GuzzleHttp\ClientInterface;
 use Exception;
+use App\Services\WebClientInterface;
 
 class Fetch
 {
     public function __construct(
         private string $apiKey,
-        private ClientInterface $httpClient
+        private WebClientInterface $httpClient
     ) {}
 
     public function fetch(string $youtubeChannel): FetcheResult
     {
         $uploadsId = $this->getUploads($youtubeChannel);
-
         $fetcher = new Fetcher($this->apiKey, $this->httpClient);
-
         $fetcher->fetch($uploadsId);
-
         return $fetcher->getResults();
     }
 
@@ -40,8 +37,8 @@ class Fetch
             $this->apiKey
         );
 
-        $response = $this->httpClient->request("GET", $urlIdList);
-        $contents = json_decode($response->getBody()->getContents());
+        // $response = $this->httpClient->request("GET", $urlIdList);
+        $contents = json_decode($this->httpClient->getContentString($urlIdList));
 
         if (!empty($contents->items)) {
             return $contents->items[0]->contentDetails->relatedPlaylists->uploads;
@@ -61,8 +58,9 @@ class Fetch
             $channelName,
             $this->apiKey
         );
-        $response = $this->httpClient->request("GET", $urlChannelId);
-        $contents = json_decode($response->getBody()->getContents());
+        // $response = $this->httpClient->request("GET", $urlChannelId);
+
+        $contents = json_decode($this->httpClient->getContentString($urlChannelId));
 
         return $contents->items[0]->id->channelId;
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\FetcheResult;
-use GuzzleHttp\ClientInterface;
+use App\Services\WebClientInterface;
 
 class Fetcher
 {
@@ -15,11 +15,11 @@ class Fetcher
 
     private string $channelName;
     
-    public function __construct(private string $apiKey, private ClientInterface $httpClient)
+    public function __construct(private string $apiKey, private WebClientInterface $httpClient)
     {
     }
     
-    public function getByUploadsIds(string $uploadsId)
+    public function getByUploadsIds(string $uploadsId): string
     {
         $pagination = 50;
         $urlToPaylist = sprintf(
@@ -28,8 +28,7 @@ class Fetcher
             $uploadsId,
             $this->apiKey
         );
-        $response = $this->httpClient->request("GET", $urlToPaylist);
-        return $response->getBody()->getContents();
+        return $this->httpClient->getContentString($urlToPaylist);
     }
 
     public function fetch(string $uploadsId): self
