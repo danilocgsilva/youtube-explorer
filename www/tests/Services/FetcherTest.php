@@ -6,8 +6,9 @@ use PHPUnit\Framework\TestCase;
 use App\Services\Fetcher;
 use App\Services\WebClientInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use stdClass;
 use App\Data\FetcheResult;
+use App\Data\Video;
+use DateTime;
 
 class FetcherTest extends TestCase
 {
@@ -40,6 +41,24 @@ class FetcherTest extends TestCase
         $this->assertSame("Video title", $fetchedResult->videoTitles[0]);
     }
 
+    /**
+     * @test
+     */
+    public function getResultsCheckingVideosReturned()
+    {
+        $this->fetcher->fetch("Ubc123zxyz");
+        $fetchedResult = $this->fetcher->getResults();
+        $videosList = $fetchedResult->videosList;
+        /** @var \App\Data\Video */
+        $firstVideo = $videosList[0];
+    
+        $this->assertInstanceOf(Video::class, $firstVideo);
+        $this->assertSame("Video title", $firstVideo->videoTitle);
+        $this->assertInstanceOf(DateTime::class, $firstVideo->publishTime);
+        $this->assertSame("2025-02-10T14:08:48Z", $firstVideo->publishTime->format("Y-m-d\TH:i:s\Z"));
+        $this->assertSame("2025-02-10T14:08:48Z", $firstVideo->publishTimeString);
+    }
+
     private function getWebClientMock(): MockObject|WebClientInterface
     {
         $getContentObjectReturn = (object) [
@@ -51,6 +70,9 @@ class FetcherTest extends TestCase
                     "snippet" => [
                         "channelTitle" => "Channel title",
                         "title" => "Video title"
+                    ],
+                    "contentDetails" => [
+                        "videoPublishedAt" => "2025-02-10T14:08:48Z"
                     ]
                 ]
             ]

@@ -18,9 +18,9 @@
     </p>
     <hr />
     <ul>
-        {% for video_name in videos_list.videoTitles %}
+        {% for video in videos_list.videosList %}
             <li>
-                {{ video_name }}
+                {{ video.videoTitle }} - {{ video.publishTimeString }}
             </li>
         {% endfor %}
     </ul>

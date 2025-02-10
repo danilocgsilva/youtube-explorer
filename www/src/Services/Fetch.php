@@ -37,7 +37,6 @@ class Fetch
             $this->apiKey
         );
 
-        // $response = $this->httpClient->request("GET", $urlIdList);
         $contents = json_decode($this->httpClient->getContentString($urlIdList));
 
         if (!empty($contents->items)) {

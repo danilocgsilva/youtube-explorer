@@ -9,6 +9,7 @@ class FetcheResult
     public function __construct(
         public readonly int $channelVideosCount,
         public readonly array $videoTitles,
-        public readonly string $channelTitle
+        public readonly string $channelTitle,
+        public readonly array $videosList
     ) {}
 }

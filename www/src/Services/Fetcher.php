@@ -6,10 +6,15 @@ namespace App\Services;
 
 use App\Data\FetcheResult;
 use App\Services\WebClientInterface;
+use App\Data\Video;
+use DateTime;
 
 class Fetcher
 {
     private array $titlesList = [];
+
+    /** @var array<\App\Data\Video> */
+    private array $videosList = [];
 
     private int $channelVideoCount;
 
@@ -30,6 +35,12 @@ class Fetcher
 
         foreach ($contents->items as $item) {
             $this->titlesList[] = $item->snippet->title;
+            $this->videosList[] = new Video(
+                $item->snippet->title,
+                
+               DateTime::createFromFormat("Y-m-d\TH:i:s\Z", $item->contentDetails->videoPublishedAt),
+               $item->contentDetails->videoPublishedAt
+            );
         }
 
         return $this;
@@ -40,7 +51,8 @@ class Fetcher
         return new FetcheResult(
             $this->channelVideoCount,
             $this->titlesList,
-            $this->channelName
+            $this->channelName,
+            $this->videosList
         );
     }
 
