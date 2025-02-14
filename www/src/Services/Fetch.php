@@ -65,9 +65,10 @@ class Fetch
 
     private function getChannelIdByName(string $channelName): string
     {
+        $channelNameSeatch = ltrim($channelName, "@");
         $urlChannelId = sprintf(
-            "https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=channel&key=%s&maxResults=1",
-            $channelName,
+            "https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=channel&key=%s&maxResults=10",
+            $channelNameSeatch,
             $this->apiKey
         );
 
