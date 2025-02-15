@@ -7,9 +7,10 @@ RUN apt-get install php php-mysql php-xdebug php-curl php-zip php-xml php-mbstri
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - 
 RUN apt-get install -y nodejs
-COPY config/xdebug.ini /etc/php/8.2/mods-available/
-COPY config/startup.sh /startup.sh
-COPY config/000-default.conf /etc/apache2/sites-available/
+COPY /config/xdebug.ini /etc/php/8.2/mods-available/
+COPY /config/startup.sh /startup.sh
+COPY /config/000-default.conf /etc/apache2/sites-available/
+COPY /config/apache2.conf /etc/apache2/apache2.conf
 RUN chmod +x /startup.sh
 
 CMD /startup.sh

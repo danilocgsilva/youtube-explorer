@@ -35,5 +35,21 @@ services:
             $client: '@guzzle_http.client'
             $logger: '@logger'
 
+when@test:
+    services:
+        # guzzle_http.client:
+        #     class: App\Tests\Mocks\GuzzleHttp\ClientMock
+
+        logger.mock:
+            class: App\Tests\Mocks\LoggerMock
+
+        web_client.client:
+            class: App\Tests\Mocks\Services\WebClientMock
+            # arguments:
+            #     $client: '@guzzle_http.client'
+            #     $logger: '@logger.mock'
+    
+
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

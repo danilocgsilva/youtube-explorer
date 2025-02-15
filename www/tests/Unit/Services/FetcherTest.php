@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Tests\Services;
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
 use App\Services\Fetcher;
@@ -9,11 +11,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use App\Data\FetcheResult;
 use App\Data\Video;
 use DateTime;
+use Override;
 
 class FetcherTest extends TestCase
 {
     private Fetcher $fetcher;
 
+    #[Override]
     public function setUp(): void
     {
         $this->fetcher = new Fetcher("", $this->getWebClientMock());
