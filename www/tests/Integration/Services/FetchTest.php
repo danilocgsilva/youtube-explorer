@@ -16,6 +16,7 @@ use App\Tests\TestTraits\ResponseDataMockerTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Services\WebClientInterface;
 use App\Services\WebClient;
+use App\Repository\ChannelRepository;
 
 class FetchTest extends KernelTestCase
 {
@@ -40,8 +41,28 @@ class FetchTest extends KernelTestCase
     public function testAddOneInDatabase(): void
     {
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
+        $channelRepository  = $this->container->get(ChannelRepository::class);
+
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
+        $this->assertSame(0, count($channelRepository->findAll()));
+
         $this->fetch->fetch("@mysearchChannel");
         $this->assertSame(1, count($channelSearchHistoryRepository->findAll()));
+        $this->assertSame(1, count($channelRepository->findAll()));
+    }
+
+    public function testCaptureOnceTheChannel(): void
+    {
+        $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
+        $channelRepository  = $this->container->get(ChannelRepository::class);
+
+        $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
+        $this->assertSame(0, count($channelRepository->findAll()));
+
+        $this->fetch->fetch("@mysearchChannel");
+        $this->fetch->fetch("@mysearchChannel");
+
+        $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
+        $this->assertSame(1, count($channelRepository->findAll()));
     }
 }
