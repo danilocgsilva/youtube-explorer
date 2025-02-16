@@ -31,7 +31,7 @@ class Fetch
 
         $this->persist($results, $channelSearchTerm);
 
-        $this->captureChannel($results);
+        $this->captureChannel($results, $channelSearchTerm);
 
         return $results;
     }
@@ -90,13 +90,14 @@ class Fetch
         $this->entityManager->flush();
     }
 
-    private function captureChannel(FetcheResult $results)
+    private function captureChannel(FetcheResult $results, string $searchTerm)
     {
         $found = $this->channelRepository->findOneBy(["channelId" => $results->channelId]);
 
         if (!$found) {
             $channel = (new Channel())
                 ->setChannelId($results->channelId)
+                ->setChannelAlias($searchTerm)
                 ->setChannelName($results->channelTitle);
 
             $this->entityManager->persist($channel);

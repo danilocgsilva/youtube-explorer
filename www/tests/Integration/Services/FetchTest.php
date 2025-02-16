@@ -18,6 +18,7 @@ use App\Tests\Mocks\LoggerMock;
 use GuzzleHttp\Psr7\Response as ClientResponse;
 use Symfony\Component\HttpFoundation\Response;
 use stdClass;
+use App\Tests\Data;
 
 class FetchTest extends KernelTestCase
 {
@@ -30,9 +31,34 @@ class FetchTest extends KernelTestCase
     private $container;
 
     /**
+     * @var array<\App\Tests\Data>
+     */
+    private array $data;
+
+    /**
      * @var \App\Tests\Mocks\ClientMock
      */
     protected $clientInterface;
+
+    public function __construct(string|null $name = null, array $data = [], $dataName = '')
+    {
+        parent::__construct($name, $data, $dataName);
+
+        $this->data = [
+            new Data(
+                "@mysearchChannel",
+                "V9tiHe43FahmXccU54OJ",
+                "zNJhf2dMqONQgWNR6FAr",
+                "Your Channel Name"
+            ),
+            new Data(
+                "@anotherChannel",
+                "sTE0Zw6OH64ACzc7uCrD",
+                "PjoY38kGsQW5Sf71Tszk",
+                "Another Channel Name"
+            ),
+        ];
+    }
 
     #[Override]
     public function setUp(): void
@@ -49,7 +75,11 @@ class FetchTest extends KernelTestCase
 
     public function testAddOneInDatabase(): void
     {
-        $this->prepareResponsesNewFetch();
+        $this->prepareResponsesNewFetch(
+            $this->data[0]->channelId, 
+            $this->data[0]->uploadId, 
+            $this->data[0]->channelName
+        );
 
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
         $channelRepository = $this->container->get(ChannelRepository::class);
@@ -57,18 +87,23 @@ class FetchTest extends KernelTestCase
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
 
-        $this->fetch->fetch("@mysearchChannel");
+        $this->fetch->fetch($this->data[0]->searchTerm);
         $this->assertSame(1, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(1, count($channelRepository->findAll()));
     }
 
     public function testCaptureOnceTheChannel(): void
     {
-        // $container = static::getContainer();
-        // $this->changeWebClient($container);
-
-        $this->prepareResponsesNewFetch();
-        $this->prepareResponsesNewFetch();
+        $this->prepareResponsesNewFetch(
+            $this->data[0]->channelId, 
+            $this->data[0]->uploadId, 
+            $this->data[0]->channelName
+        );
+        $this->prepareResponsesNewFetch(
+            $this->data[0]->channelId, 
+            $this->data[0]->uploadId, 
+            $this->data[0]->channelName
+        );
 
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
         $channelRepository = $this->container->get(ChannelRepository::class);
@@ -76,20 +111,25 @@ class FetchTest extends KernelTestCase
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
 
-        $this->fetch->fetch("@mysearchChannel");
-        $this->fetch->fetch("@mysearchChannel");
+        $this->fetch->fetch($this->data[0]->searchTerm);
+        $this->fetch->fetch($this->data[0]->searchTerm);
 
         $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(1, count($channelRepository->findAll()));
     }
 
-    public function testCaptureTwoDifferenteTheChannels(): void
+    public function testCaptureTwoDifferentTheChannels(): void
     {
-        // $container = static::getContainer();
-        // $this->changeWebClient($container);
-
-        $this->prepareResponsesNewFetch();
-        $this->prepareResponsesNewFetch();
+        $this->prepareResponsesNewFetch(
+            $this->data[0]->channelId, 
+            $this->data[0]->uploadId, 
+            $this->data[0]->channelName
+        );
+        $this->prepareResponsesNewFetch(
+            $this->data[1]->channelId, 
+            $this->data[1]->uploadId, 
+            $this->data[1]->channelName
+        );
 
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
         $channelRepository = $this->container->get(ChannelRepository::class);
@@ -97,33 +137,58 @@ class FetchTest extends KernelTestCase
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
 
-        $this->fetch->fetch("@mysearchChannel");
-        $this->fetch->fetch("@anotherChannel");
+        $this->fetch->fetch($this->data[0]->searchTerm);
+        $this->fetch->fetch($this->data[1]->searchTerm);
 
         $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(2, count($channelRepository->findAll()));
     }
 
-    private function prepareResponsesNewFetch()
+    private function prepareResponsesNewFetch(string $channelId, string $uploadsId, string $channelName)
     {
-        $responseUpload = new ClientResponse(Response::HTTP_OK, [], json_encode($this->mockWebClientStringGetUploads()));
-        $this->prepareMock($responseUpload);
+        $this->prepareMock(
+            new ClientResponse(
+                Response::HTTP_OK,
+                [],
+                json_encode($this->mockWegClientResultsGetChannelId($channelId))
+            )
+        );
 
-        $responseData = new ClientResponse(Response::HTTP_OK, [], json_encode($this->mockWebClientStringGetData()));
-        $this->prepareMock($responseData);
+        $this->prepareMock(
+            new ClientResponse(
+                Response::HTTP_OK,
+                [],
+                json_encode(
+                    $this->mockWebClientStringGetUploadsByChannelId(
+                        $uploadsId,
+                        $channelId
+                    )
+                )
+            )
+        );
 
-        $responseAllData = new ClientResponse(Response::HTTP_OK, [], json_encode($this->mockWebClientStringAllData()));
-        $this->prepareMock($responseAllData);
+        $this->prepareMock(
+            new ClientResponse(
+                Response::HTTP_OK,
+                [],
+                json_encode(
+                    $this->mockWebClientStringGetFileldsFromUploadId(
+                        $uploadsId,
+                        $channelId,
+                        $channelName
+                    )
+                )
+            )
+        );
     }
 
-    private function mockWebClientStringGetUploads(): stdClass
+    private function mockWegClientResultsGetChannelId(string $channelId): stdClass
     {
-
         $data = (object) [
             "items" => [
                 [
                     "id" => [
-                        "channelId" => "chanIdabc123"
+                        "channelId" => $channelId
                     ]
                 ]
             ]
@@ -132,17 +197,17 @@ class FetchTest extends KernelTestCase
         return $data;
     }
 
-    private function mockWebClientStringGetData(): stdClass
+    private function mockWebClientStringGetUploadsByChannelId(string $uploads, string $channelId): stdClass
     {
         $data = (object) [
             "items" => [
                 [
                     "id" => [
-                        "channelId" => "chanIdabc123"
+                        "channelId" => $channelId
                     ],
                     "contentDetails" => [
                         "relatedPlaylists" => [
-                            "uploads" => "myMockedUploadId"
+                            "uploads" => $uploads
                         ],
                         "videoPublishedAt" => "2025-01-05T12:00:12Z",
                         "videoId" => "the_video_id_abc_123"
@@ -154,24 +219,24 @@ class FetchTest extends KernelTestCase
         return $data;
     }
 
-    private function mockWebClientStringAllData(): stdClass
+    private function mockWebClientStringGetFileldsFromUploadId(string $uploads, string $channelId, string $channelName): stdClass
     {
         $data = (object) [
             "items" => [
                 [
                     "id" => [
-                        "channelId" => "chanIdabc123"
+                        "channelId" => $channelId
                     ],
                     "contentDetails" => [
                         "relatedPlaylists" => [
-                            "uploads" => "myMockedUploadId"
+                            "uploads" => $uploads
                         ],
                         "videoPublishedAt" => "2025-01-05T12:00:12Z",
                         "videoId" => "the_video_id_abc_123"
                     ],
                     "snippet" => [
                         "channelTitle" => "Your Channel Name",
-                        "channelId" => "the_channel_id_abc123",
+                        "channelId" => $channelId,
                         "title" => "The Video Title"
                     ]
                 ]
