@@ -20,7 +20,8 @@ class Fetch
         private WebClientInterface $httpClient,
         private EntityManagerInterface $entityManager,
         private ChannelRepository $channelRepository
-    ) {}
+    ) {
+    }
 
     public function fetch(string $channelSearchTerm): FetcheResult
     {
@@ -92,16 +93,32 @@ class Fetch
 
     private function captureChannel(FetcheResult $results, string $searchTerm)
     {
+        /** @var \App\Entity\Channel */
         $found = $this->channelRepository->findOneBy(["channelId" => $results->channelId]);
 
         if (!$found) {
-            $channel = (new Channel())
-                ->setChannelId($results->channelId)
-                ->setChannelAlias($searchTerm)
-                ->setChannelName($results->channelTitle);
+            $channel = $this->buildChannelEntity($results, $searchTerm);
 
             $this->entityManager->persist($channel);
             $this->entityManager->flush();
+        } else {
+            if ($found->getChannelAlias() !== $searchTerm) {
+                $found->setChannelAlias($searchTerm);
+                $this->entityManager->flush();
+            }
         }
+    }
+
+    private function buildChannelEntity(FetcheResult $results, string $searchTerm): Channel
+    {
+        $channel = (new Channel())
+            ->setChannelId($results->channelId)
+            ->setChannelName($results->channelTitle);
+
+        if ($searchTerm[0] === "@") {
+            $channel->setChannelAlias($searchTerm);
+        }
+
+        return $channel;
     }
 }
