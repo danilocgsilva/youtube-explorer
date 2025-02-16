@@ -43,8 +43,8 @@ when@test:
         logger.mock:
             class: App\Tests\Mocks\LoggerMock
 
-        web_client.client:
-            class: App\Tests\Mocks\Services\WebClientMock
+        # web_client.client:
+        #     class: App\Tests\Mocks\Services\WebClientMock
             # arguments:
             #     $client: '@guzzle_http.client'
             #     $logger: '@logger.mock'

@@ -38,7 +38,6 @@ class Fetcher
         $this->channelId = $contents->items[0]->snippet->channelId;
 
         foreach ($contents->items as $item) {
-            $this->titlesList[] = $item->snippet->title;
             $this->videosList[] = new Video(
                 $item->snippet->title,
                 

@@ -42,7 +42,6 @@ class FetcherTest extends TestCase
         $this->assertInstanceOf(FetcheResult::class, $fetchedResult);
         $this->assertSame(10, $fetchedResult->channelVideosCount);
         $this->assertSame("Channel title", $fetchedResult->channelTitle);
-        $this->assertSame("Video title", $fetchedResult->videoTitles[0]);
     }
 
     /**

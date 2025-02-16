@@ -8,15 +8,12 @@ use App\Services\Fetch;
 use Override;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use App\Repository\ChannelSearchHistoryRepository;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Client as GuzzleClient;
 use App\Tests\TestTraits\ResponseDataMockerTrait;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Services\WebClientInterface;
-use App\Services\WebClient;
 use App\Repository\ChannelRepository;
+use App\Services\WebClient;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 
 class FetchTest extends KernelTestCase
 {
@@ -40,6 +37,9 @@ class FetchTest extends KernelTestCase
     
     public function testAddOneInDatabase(): void
     {
+        $container = static::getContainer();
+        $this->changeWebClient($container);
+
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
         $channelRepository  = $this->container->get(ChannelRepository::class);
 
@@ -53,6 +53,9 @@ class FetchTest extends KernelTestCase
 
     public function testCaptureOnceTheChannel(): void
     {
+        $container = static::getContainer();
+        $this->changeWebClient($container);
+
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
         $channelRepository  = $this->container->get(ChannelRepository::class);
 
@@ -64,5 +67,65 @@ class FetchTest extends KernelTestCase
 
         $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(1, count($channelRepository->findAll()));
+    }
+
+    public function testCaptureTwoDifferenteTheChannels(): void
+    {
+        $container = static::getContainer();
+        $this->changeWebClient($container);
+        
+        $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
+        $channelRepository  = $this->container->get(ChannelRepository::class);
+
+        $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
+        $this->assertSame(0, count($channelRepository->findAll()));
+
+        $this->fetch->fetch("@mysearchChannel");
+        $this->fetch->fetch("@anotherChannel");
+
+        $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
+        $this->assertSame(2, count($channelRepository->findAll()));
+    }
+
+    private function changeWebClient($container)
+    {
+        $webClientMocked = $this->getMockBuilder(WebClient::class)
+            ->setConstructorArgs([$this->getMockBuilder(ClientInterface::class)->getMock(), "oi2"])
+            ->getMock();
+
+        $webClientMocked
+            ->method("getContentString")
+            ->willReturn($this->mockWebClientString());
+        
+        $container->set(WebClient::class, $webClientMocked);
+    }
+
+    private function mockWebClientString(): string
+    {
+        $data = (object) [
+            "items" => [
+                [
+                    "id" => [
+                        "channelId" => "chanIdabc123"
+                    ],
+                    "contentDetails" => [
+                        "relatedPlaylists" => [
+                            "uploads" => "myMockedUploadId"
+                        ],
+                        "videoPublishedAt" => "2025-01-05T12:00:12Z",
+                        "videoId" => "the_video_id_abc_123"
+                    ],
+                    "snippet" => [
+                        "channelTitle" => "Your Channel Name",
+                        "channelId" => "the_channel_id_abc123",
+                        "title" => "The Video Title"
+                    ]
+                ]
+            ],
+            "pageInfo" => [
+                "totalResults" => 1
+            ]
+        ];
+        return json_encode($data);
     }
 }
