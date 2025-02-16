@@ -11,3 +11,12 @@ body {
 a {
     text-decoration: underline;
 }
+.form-inline {
+    display: inline-block;
+}
+.form-inline input[type=submit] {
+    text-decoration: underline;
+}
+.form-inline input[type=submit]:hover {
+    cursor: pointer;
+}

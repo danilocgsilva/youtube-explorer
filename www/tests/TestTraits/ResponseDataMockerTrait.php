@@ -8,7 +8,7 @@ use stdClass;
 
 trait ResponseDataMockerTrait
 {
-    public function getResponseMocked()
+    public function getResponseMocked(): stdClass
     {
         return new stdClass();
     }

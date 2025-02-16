@@ -8,6 +8,7 @@ use App\Data\FetcheResult;
 use App\Services\WebClientInterface;
 use App\Data\Video;
 use DateTime;
+use Exception;
 
 class Fetcher
 {
@@ -21,9 +22,23 @@ class Fetcher
     private string $channelName;
 
     private string $channelId;
-    
-    public function __construct(private string $apiKey, private WebClientInterface $httpClient)
+
+    public function __construct(
+        private string $apiKey, 
+        private WebClientInterface $httpClient,
+        private int $pagination = 50
+    ) { 
+        if ($pagination > 50) {
+            throw new Exception("The youtube api does not allow a pagination higher than 50.");
+        }
+        $this->pagination = $pagination;
+    }
+
+    public function setPagination(int $pagination): self
     {
+        $this->pagination = $pagination;
+        
+        return $this;
     }
 
     public function fetch(string $uploadsId): self
@@ -63,10 +78,9 @@ class Fetcher
 
     private function getByUploadsIds(string $uploadsId): string
     {
-        $pagination = 50;
         $urlToPaylist = sprintf(
             'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=%s&playlistId=%s&key=%s',
-            $pagination,
+            $this->pagination,
             $uploadsId,
             $this->apiKey
         );

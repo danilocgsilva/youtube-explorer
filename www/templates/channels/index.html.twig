@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Channels once fetched
+{% endblock %}
+
+{% block h1_header %}
+    Channels once fetched
+{% endblock %}
+
+{% block body %}
+
+    <p>
+        <a href="{{ path('app_default') }}">
+            Go to a new search
+        </a>
+    </p>
+
+    <ul>
+        {% for channel in channels %}
+            <li>
+                <a href="https://www.youtube.com/{{ channel.channelAlias ?: "channel/" ~ channel.channelId }}">
+                    {{ channel.channelName }}
+                </a>
+                ,
+                <form action="{{ path('app_main_list') }}" method="GET" class="form-inline">
+                    <input type="hidden" id="youtube-channel-id" name="youtube-channel-id" type="text" value="{{ channel.channelAlias ?: channel.channelId }}" />
+                    <input type="hidden" name="token" value="{{ csrf_token("search-term") }}" />
+                    <input class="" type="submit" value="New search" />
+                </form>
+
+            </li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
