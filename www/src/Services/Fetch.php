@@ -72,7 +72,8 @@ class Fetch
             $this->apiKey
         );
 
-        $contents = json_decode($this->httpClient->getContentString($urlChannelId));
+        $clientContent = $this->httpClient->getContentString($urlChannelId);
+        $contents = json_decode($clientContent);
 
         return $contents->items[0]->id->channelId;
     }

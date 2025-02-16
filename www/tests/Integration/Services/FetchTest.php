@@ -14,6 +14,10 @@ use App\Repository\ChannelRepository;
 use App\Services\WebClient;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use App\Tests\Mocks\LoggerMock;
+use GuzzleHttp\Psr7\Response as ClientResponse;
+use Symfony\Component\HttpFoundation\Response;
+use stdClass;
 
 class FetchTest extends KernelTestCase
 {
@@ -25,23 +29,30 @@ class FetchTest extends KernelTestCase
 
     private $container;
 
+    /**
+     * @var \App\Tests\Mocks\ClientMock
+     */
+    protected $clientInterface;
+
     #[Override]
     public function setUp(): void
     {
         $this->container = static::getContainer();
+        $this->clientInterface = $this->container->get('guzzle_http.client');
+
+
         $this->entityManager = self::getContainer()->get('doctrine')->getManager();
         $this->entityManager->getConnection()->beginTransaction();
 
         $this->fetch = $this->container->get(Fetch::class);
     }
-    
+
     public function testAddOneInDatabase(): void
     {
-        $container = static::getContainer();
-        $this->changeWebClient($container);
+        $this->prepareResponsesNewFetch();
 
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
-        $channelRepository  = $this->container->get(ChannelRepository::class);
+        $channelRepository = $this->container->get(ChannelRepository::class);
 
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
@@ -53,11 +64,14 @@ class FetchTest extends KernelTestCase
 
     public function testCaptureOnceTheChannel(): void
     {
-        $container = static::getContainer();
-        $this->changeWebClient($container);
+        // $container = static::getContainer();
+        // $this->changeWebClient($container);
+
+        $this->prepareResponsesNewFetch();
+        $this->prepareResponsesNewFetch();
 
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
-        $channelRepository  = $this->container->get(ChannelRepository::class);
+        $channelRepository = $this->container->get(ChannelRepository::class);
 
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
@@ -71,11 +85,14 @@ class FetchTest extends KernelTestCase
 
     public function testCaptureTwoDifferenteTheChannels(): void
     {
-        $container = static::getContainer();
-        $this->changeWebClient($container);
-        
+        // $container = static::getContainer();
+        // $this->changeWebClient($container);
+
+        $this->prepareResponsesNewFetch();
+        $this->prepareResponsesNewFetch();
+
         $channelSearchHistoryRepository = $this->container->get(ChannelSearchHistoryRepository::class);
-        $channelRepository  = $this->container->get(ChannelRepository::class);
+        $channelRepository = $this->container->get(ChannelRepository::class);
 
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
@@ -87,20 +104,57 @@ class FetchTest extends KernelTestCase
         $this->assertSame(2, count($channelRepository->findAll()));
     }
 
-    private function changeWebClient($container)
+    private function prepareResponsesNewFetch()
     {
-        $webClientMocked = $this->getMockBuilder(WebClient::class)
-            ->setConstructorArgs([$this->getMockBuilder(ClientInterface::class)->getMock(), "oi2"])
-            ->getMock();
+        $responseUpload = new ClientResponse(Response::HTTP_OK, [], json_encode($this->mockWebClientStringGetUploads()));
+        $this->prepareMock($responseUpload);
 
-        $webClientMocked
-            ->method("getContentString")
-            ->willReturn($this->mockWebClientString());
-        
-        $container->set(WebClient::class, $webClientMocked);
+        $responseData = new ClientResponse(Response::HTTP_OK, [], json_encode($this->mockWebClientStringGetData()));
+        $this->prepareMock($responseData);
+
+        $responseAllData = new ClientResponse(Response::HTTP_OK, [], json_encode($this->mockWebClientStringAllData()));
+        $this->prepareMock($responseAllData);
     }
 
-    private function mockWebClientString(): string
+    private function mockWebClientStringGetUploads(): stdClass
+    {
+
+        $data = (object) [
+            "items" => [
+                [
+                    "id" => [
+                        "channelId" => "chanIdabc123"
+                    ]
+                ]
+            ]
+        ];
+
+        return $data;
+    }
+
+    private function mockWebClientStringGetData(): stdClass
+    {
+        $data = (object) [
+            "items" => [
+                [
+                    "id" => [
+                        "channelId" => "chanIdabc123"
+                    ],
+                    "contentDetails" => [
+                        "relatedPlaylists" => [
+                            "uploads" => "myMockedUploadId"
+                        ],
+                        "videoPublishedAt" => "2025-01-05T12:00:12Z",
+                        "videoId" => "the_video_id_abc_123"
+                    ],
+                ]
+            ]
+        ];
+
+        return $data;
+    }
+
+    private function mockWebClientStringAllData(): stdClass
     {
         $data = (object) [
             "items" => [
@@ -126,6 +180,12 @@ class FetchTest extends KernelTestCase
                 "totalResults" => 1
             ]
         ];
-        return json_encode($data);
+
+        return $data;
+    }
+
+    protected function prepareMock($response)
+    {
+        $this->clientInterface->appendResponse([$response]);
     }
 }

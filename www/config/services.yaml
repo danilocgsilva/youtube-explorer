@@ -37,8 +37,8 @@ services:
 
 when@test:
     services:
-        # guzzle_http.client:
-        #     class: App\Tests\Mocks\GuzzleHttp\ClientMock
+        guzzle_http.client:
+            class: App\Tests\Mocks\ClientMock
 
         logger.mock:
             class: App\Tests\Mocks\LoggerMock
