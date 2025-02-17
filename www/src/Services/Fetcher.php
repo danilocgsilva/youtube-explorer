@@ -9,9 +9,12 @@ use App\Services\WebClientInterface;
 use App\Data\Video;
 use DateTime;
 use Exception;
+use App\Traits\GetByUploadsIdsTrait;
 
 class Fetcher
 {
+    use GetByUploadsIdsTrait;
+    
     private array $titlesList = [];
 
     /** @var array<\App\Data\Video> */
@@ -43,7 +46,12 @@ class Fetcher
 
     public function fetch(string $uploadsId): self
     {
-        $rawContentsString = $this->getByUploadsIds($uploadsId);
+        $rawContentsString = $this->getByUploadsIds(
+            $uploadsId,
+            $this->pagination,
+            $this->apiKey,
+            $this->httpClient
+        );
         $contents = json_decode($rawContentsString);
 
         $this->channelVideoCount = $contents->pageInfo->totalResults;
@@ -74,16 +82,5 @@ class Fetcher
             $this->videosList,
             $this->channelId
         );
-    }
-
-    private function getByUploadsIds(string $uploadsId): string
-    {
-        $urlToPaylist = sprintf(
-            'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=%s&playlistId=%s&key=%s',
-            $this->pagination,
-            $uploadsId,
-            $this->apiKey
-        );
-        return $this->httpClient->getContentString($urlToPaylist);
     }
 }

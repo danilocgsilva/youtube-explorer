@@ -22,6 +22,7 @@ class WebClient implements WebClientInterface
     {
         $contentFetched = $this->webClient->request("GET", $url);
         $contentString = $contentFetched->getBody()->getContents();
+        $this->logger->info($url);
         $this->logger->info($contentString);
 
         return $contentString;

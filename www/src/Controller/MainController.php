@@ -22,9 +22,7 @@ final class MainController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        /**
-         * @var \App\Data\FetcheResult
-         */
+        /** @var \App\Data\FetcheResult */
         $videosList = $fetch->fetch($request->get("youtube-channel-id"));
 
         return $this->render('main/list.html.twig', [

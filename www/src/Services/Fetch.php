@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\FetcheResult;
+use App\Mapper\GetVideoArray;
 use Exception;
 use App\Services\WebClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -12,6 +13,7 @@ use App\Entity\ChannelSearchHistory;
 use DateTime;
 use App\Entity\Channel;
 use App\Repository\ChannelRepository;
+use App\Repository\VideoRepository;
 
 class Fetch
 {
@@ -19,20 +21,31 @@ class Fetch
         private string $apiKey,
         private WebClientInterface $httpClient,
         private EntityManagerInterface $entityManager,
-        private ChannelRepository $channelRepository
+        private ChannelRepository $channelRepository,
+        private VideoRepository $videoRepository
     ) {
     }
 
     public function fetch(string $channelSearchTerm): FetcheResult
     {
         $uploadsId = $this->getUploads($channelSearchTerm);
-        $fetcher = new Fetcher($this->apiKey, $this->httpClient);
+        $fetcher = new Fetcher($this->apiKey, $this->httpClient, 50);
         $fetcher->fetch($uploadsId);
         $results = $fetcher->getResults();
 
         $this->persist($results, $channelSearchTerm);
 
-        $this->captureChannel($results, $channelSearchTerm);
+        $capturedChannel = $this->captureChannel($results, $channelSearchTerm);
+
+        $videosArrayGetter = new GetVideoArray($results);
+        $videosArrayGetter->setChannel($capturedChannel);
+
+        /** @var array<\App\Entity\Video> */
+        $videos = $videosArrayGetter->getVideos();
+        foreach ($videos as $video) {
+            $this->entityManager->persist($video);
+        }
+        $this->entityManager->flush();
 
         return $results;
     }
@@ -91,7 +104,7 @@ class Fetch
         $this->entityManager->flush();
     }
 
-    private function captureChannel(FetcheResult $results, string $searchTerm)
+    private function captureChannel(FetcheResult $results, string $searchTerm): Channel
     {
         /** @var \App\Entity\Channel */
         $found = $this->channelRepository->findOneBy(["channelId" => $results->channelId]);
@@ -101,12 +114,16 @@ class Fetch
 
             $this->entityManager->persist($channel);
             $this->entityManager->flush();
+
+            return $channel;
         } else {
             if ($found->getChannelAlias() !== $searchTerm) {
                 $found->setChannelAlias($searchTerm);
                 $this->entityManager->flush();
             }
         }
+
+        return $found;
     }
 
     private function buildChannelEntity(FetcheResult $results, string $searchTerm): Channel
