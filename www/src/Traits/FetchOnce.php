@@ -6,22 +6,23 @@ namespace App\Traits;
 
 use App\Services\Fetcher;
 use App\Mapper\GetVideoArray;
+use App\Data\FetcheResult;
 
 trait FetchOnce
 {
     public function fetchSinglePagination(
         string $uploadsId,
-        string $channelSearchTerm,
-        int $pagination
-    )
+        int $pagination = 50,
+        string $nextPageToken = ""
+    ): FetcheResult
     {
         $fetcher = new Fetcher(
             $this->apiKey, 
             $this->httpClient, 
             $pagination
         );
-        $fetcher->fetch($uploadsId);
-        
+        $fetcher->fetch($uploadsId, $nextPageToken);
+
         return $fetcher->getResults();
 
         // $this->persistChannel($results, $channelSearchTerm);

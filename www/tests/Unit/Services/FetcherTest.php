@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @TODO: give a more comprehensive results test for getResults method
+ * @TODO: also must test pagination, after receiving an empty nextPageToken
+ */
+
 declare(strict_types=1);
 
 namespace App\Tests\Unit\Services;

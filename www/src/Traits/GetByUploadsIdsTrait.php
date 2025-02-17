@@ -23,7 +23,7 @@ trait GetByUploadsIdsTrait
             $apiKey
         );
 
-        if (empty($pageToken)) {
+        if (!empty($pageToken)) {
             $urlToPaylist .= "&pageToken={$pageToken}";
         }
         

@@ -16,11 +16,13 @@ use App\Repository\VideoRepository;
 use Exception;
 use DateTime;
 use App\Traits\FetchOnce;
+use App\Traits\CaptureChannelTrait;
 
 class Fetch
 {
     use FetchOnce;
     use PersistVideosFetchedTrait;
+    use CaptureChannelTrait;
 
     public function __construct(
         private string $apiKey,
@@ -33,27 +35,28 @@ class Fetch
 
     public function fetch(string $channelSearchTerm): mixed
     {
-        $pagination = 50;
+        // $pagination = 50;
         
         $uploadsId = $this->getUploads($channelSearchTerm);
 
-        // $this->fetchAll(
+        $resultsList = $this->fetchAll(
+            $uploadsId,
+            30,
+            $this->apiKey,
+            $this->httpClient,
+            $this->entityManager,
+            $channelSearchTerm
+        );
+        $results = $resultsList[0];
+
+        // /** @var \App\Data\FetcheResult */
+        // $results = $this->fetchSinglePagination(
         //     $uploadsId,
-        //     $pagination,
-        //     $this->apiKey,w
-        //     $this->httpClient,
-        //     $this->entityManager
+        //     50
         // );
 
-        /** @var \App\Data\FetcheResult */
-        $results = $this->fetchSinglePagination(
-            $uploadsId,
-            $channelSearchTerm,
-            $pagination
-        );
-
         /** @var \App\Entity\Channel */
-        $capturedChannel = $this->captureChannel($results, $channelSearchTerm);
+        $capturedChannel = $this->captureChannel($results, $channelSearchTerm, $this->channelRepository);
         $this->persistChannel($results, $channelSearchTerm);
 
         $this->persistVideos($results, $capturedChannel);
@@ -76,8 +79,9 @@ class Fetch
         int $pagination,
         string $apiKey,
         WebClientInterface $webClient,
-        EntityManagerInterface $entityManager
-    ): void
+        EntityManagerInterface $entityManager,
+        string $channelSearchTerm
+    ): array
     {
         $fetchAllVideos = new FetchAllVideos(
             $uploadsId,
@@ -86,7 +90,11 @@ class Fetch
             $webClient,
             $entityManager
         );
-        $fetchAllVideos->fetchAllVideos();
+
+        return $fetchAllVideos->fetchAllVideos(
+            $channelSearchTerm, 
+            $this->channelRepository
+        );
     }
 
     private function getUploads(string $youtubeChannel)
@@ -131,50 +139,37 @@ class Fetch
         return $contents->items[0]->id->channelId;
     }
 
-    private function persistChannel(FetcheResult $results, string $channelSearchTerm): void
-    {
-        $channelSearchHistory = (new ChannelSearchHistory())
-            ->setChannelId($results->channelId)
-            ->setChannelName($results->channelTitle)
-            ->setSearchTerm($channelSearchTerm)
-            ->setWhenFetched(new DateTime());
+    // private function persistChannel(FetcheResult $results, string $channelSearchTerm): void
+    // {
+    //     $channelSearchHistory = (new ChannelSearchHistory())
+    //         ->setChannelId($results->channelId)
+    //         ->setChannelName($results->channelTitle)
+    //         ->setSearchTerm($channelSearchTerm)
+    //         ->setWhenFetched(new DateTime());
 
-        $this->entityManager->persist($channelSearchHistory);
-        $this->entityManager->flush();
-    }
+    //     $this->entityManager->persist($channelSearchHistory);
+    //     $this->entityManager->flush();
+    // }
 
-    private function captureChannel(FetcheResult $results, string $searchTerm): Channel
-    {
-        /** @var \App\Entity\Channel */
-        $found = $this->channelRepository->findOneBy(["channelId" => $results->channelId]);
+    // private function captureChannel(FetcheResult $results, string $searchTerm): Channel
+    // {
+    //     /** @var \App\Entity\Channel */
+    //     $found = $this->channelRepository->findOneBy(["channelId" => $results->channelId]);
 
-        if (!$found) {
-            $channel = $this->buildChannelEntity($results, $searchTerm);
+    //     if (!$found) {
+    //         $channel = $this->buildChannelEntity($results, $searchTerm);
 
-            $this->entityManager->persist($channel);
-            $this->entityManager->flush();
+    //         $this->entityManager->persist($channel);
+    //         $this->entityManager->flush();
 
-            return $channel;
-        } else {
-            if ($found->getChannelAlias() !== $searchTerm) {
-                $found->setChannelAlias($searchTerm);
-                $this->entityManager->flush();
-            }
-        }
+    //         return $channel;
+    //     } else {
+    //         if ($found->getChannelAlias() !== $searchTerm) {
+    //             $found->setChannelAlias($searchTerm);
+    //             $this->entityManager->flush();
+    //         }
+    //     }
 
-        return $found;
-    }
-
-    private function buildChannelEntity(FetcheResult $results, string $searchTerm): Channel
-    {
-        $channel = (new Channel())
-            ->setChannelId($results->channelId)
-            ->setChannelName($results->channelTitle);
-
-        if ($searchTerm[0] === "@") {
-            $channel->setChannelAlias($searchTerm);
-        }
-
-        return $channel;
-    }
+    //     return $found;
+    // }
 }

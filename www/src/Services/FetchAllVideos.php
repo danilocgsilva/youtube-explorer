@@ -4,19 +4,27 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Traits\CaptureChannelTrait;
 use App\Traits\FetchOnce;
 use App\Traits\GetByUploadsIdsTrait;
 use DateTime;
 use App\Data\Video;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Mapper\GetVideoArray;
+use App\Data\FetcheResult;
+use App\Repository\ChannelRepository;
+use App\Traits\PersistVideosFetchedTrait;
 
 class FetchAllVideos
 {
     use GetByUploadsIdsTrait;
     use FetchOnce;
+    use PersistVideosFetchedTrait;
+    use CaptureChannelTrait;
 
     private $count = 0;
+
+    private string $nextPageToken = "";
 
     public function __construct(
         private string $uploadsId,
@@ -27,46 +35,66 @@ class FetchAllVideos
     ) {
     }
 
-    public function fetchAllVideos()
+    public function fetchAllVideos(string $channelSearchTerm, ChannelRepository $channelRepository): array
     {
-        $pageToken = "";
-        while ($rawContentsString = $this->fetchNext($pageToken)) {
-            $contents = json_decode($rawContentsString);
+        $fetchesResults = [];
+        while ($results = $this->fetchNext()) {
+            $capturedChannel = $this->captureChannel($results, $channelSearchTerm, $channelRepository);
+            $this->persistChannel($results, $channelSearchTerm);
+    
+            $this->persistVideos($results, $capturedChannel);
+            
+            $fetchesResults[] = $results;
+            // $contents = json_decode($rawContentsString);
 
-            $this->channelVideoCount = $contents->pageInfo->totalResults;
+            // $this->channelVideoCount = $contents->pageInfo->totalResults;
 
-            $this->channelName = $contents->items[0]->snippet->channelTitle;
+            // $this->channelName = $contents->items[0]->snippet->channelTitle;
 
-            $this->channelId = $contents->items[0]->snippet->channelId;
+            // $this->channelId = $contents->items[0]->snippet->channelId;
 
-            foreach ($contents->items as $item) {
-                $videoLoop = new Video(
-                    $item->snippet->title,
-                    DateTime::createFromFormat("Y-m-d\TH:i:s\Z", $item->contentDetails->videoPublishedAt),
-                    $item->contentDetails->videoPublishedAt,
-                    $item->contentDetails->videoId
-                );
-                $this->entityManager->persist($videoLoop);
-            }
-            $this->entityManager->flush();
+            // foreach ($contents->items as $item) {
+            //     $videoLoop = new Video(
+            //         $item->snippet->title,
+            //         DateTime::createFromFormat("Y-m-d\TH:i:s\Z", $item->contentDetails->videoPublishedAt),
+            //         $item->contentDetails->videoPublishedAt,
+            //         $item->contentDetails->videoId
+            //     );
+            //     $this->entityManager->persist($videoLoop);
+            // }
+            // $this->entityManager->flush();
 
             // $this->fetchSinglePagination(
             //     $this->uploadsId,
             // );
         }
+
+        return $fetchesResults;
     }
 
-    private function fetchNext(string $pageToken): string
+
+
+    private function fetchNext(): FetcheResult|null
     {
-        if ($this->count >= 3) {
-            return "";
+        if ($this->count >= 4) {
+            throw new \Exception("Enough!");
         }
-        return $this->getByUploadsIds(
-            $this->uploadsId,
-            $this->pagination,
-            $this->apiKey,
-            $this->httpClient,
-            $pageToken
-        );
+        // return $this->getByUploadsIds(
+        //     $this->uploadsId,
+        //     $this->pagination,
+        //     $this->apiKey,
+        //     $this->httpClient,
+        //     $this->nextPageToken
+        // );
+
+        $results = $this->fetchSinglePagination($this->uploadsId, $this->pagination, $this->nextPageToken);
+        if (!$results->nextPageToken) {
+            return null;
+        }
+        $this->nextPageToken = $results->nextPageToken;
+        $this->count++;
+        return $results;
     }
+
+
 }

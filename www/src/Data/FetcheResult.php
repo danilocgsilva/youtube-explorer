@@ -11,6 +11,7 @@ class FetcheResult
         public readonly array $videoTitles,
         public readonly string $channelTitle,
         public readonly array $videosList,
-        public readonly string $channelId
+        public readonly string $channelId,
+        public readonly ?string $nextPageToken = null
     ) {}
 }

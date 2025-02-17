@@ -26,6 +26,8 @@ class Fetcher
 
     private string $channelId;
 
+    private ?string $nextPageToken;
+
     public function __construct(
         private string $apiKey, 
         private WebClientInterface $httpClient,
@@ -44,13 +46,14 @@ class Fetcher
         return $this;
     }
 
-    public function fetch(string $uploadsId): self
+    public function fetch(string $uploadsId, string $pageToken = ""): self
     {
         $rawContentsString = $this->getByUploadsIds(
             $uploadsId,
             $this->pagination,
             $this->apiKey,
-            $this->httpClient
+            $this->httpClient,
+            $pageToken
         );
         $contents = json_decode($rawContentsString);
 
@@ -59,6 +62,8 @@ class Fetcher
         $this->channelName = $contents->items[0]->snippet->channelTitle;
 
         $this->channelId = $contents->items[0]->snippet->channelId;
+
+        $this->nextPageToken = $contents->nextPageToken ?? "";
 
         foreach ($contents->items as $item) {
             $this->videosList[] = new Video(
@@ -79,7 +84,8 @@ class Fetcher
             $this->titlesList,
             $this->channelName,
             $this->videosList,
-            $this->channelId
+            $this->channelId,
+            $this->nextPageToken
         );
     }
 }
