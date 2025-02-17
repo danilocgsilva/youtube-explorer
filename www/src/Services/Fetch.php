@@ -29,7 +29,34 @@ class Fetch
     public function fetch(string $channelSearchTerm): FetcheResult
     {
         $uploadsId = $this->getUploads($channelSearchTerm);
-        $fetcher = new Fetcher($this->apiKey, $this->httpClient, 50);
+
+        $this->fetchAll($uploadsId);
+
+        // $results = $this->fetchWithoutPagination(
+        //     $uploadsId,
+        //     $channelSearchTerm
+        // );
+
+        return $results;
+    }
+
+    private function fetchAll(string $uploadsId)
+    {
+        $fetchAllVideos = new FetchAllVideos(
+            $uploadsId
+        )
+    }
+
+    private function fetchWithoutPagination(
+        string $uploadsId,
+        string $channelSearchTerm
+    )
+    {
+        $fetcher = new Fetcher(
+            $this->apiKey, 
+            $this->httpClient, 
+            50
+        );
         $fetcher->fetch($uploadsId);
         $results = $fetcher->getResults();
 
