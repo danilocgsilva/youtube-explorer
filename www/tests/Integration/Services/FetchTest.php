@@ -15,6 +15,8 @@ use GuzzleHttp\Psr7\Response as ClientResponse;
 use Symfony\Component\HttpFoundation\Response;
 use stdClass;
 use App\Tests\Data;
+use Psr\Log\LoggerInterface;
+use App\Tests\ServicesTest\LoggerMock;
 
 class FetchTest extends KernelTestCase
 {
@@ -30,6 +32,8 @@ class FetchTest extends KernelTestCase
      * @var array<\App\Tests\Data>
      */
     private array $data;
+
+    private LoggerInterface $logger;
 
     /**
      * @var \App\Tests\Mocks\ClientMock
@@ -60,8 +64,9 @@ class FetchTest extends KernelTestCase
     public function setUp(): void
     {
         $this->container = static::getContainer();
+        
+        $this->logger = $this->container->get('logger.mock');
         $this->clientInterface = $this->container->get('guzzle_http.client');
-
 
         $this->entityManager = self::getContainer()->get('doctrine')->getManager();
         $this->entityManager->getConnection()->beginTransaction();
@@ -83,7 +88,7 @@ class FetchTest extends KernelTestCase
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
 
-        $this->fetch->fetch($this->data[0]->searchTerm);
+        $this->fetch->fetch($this->data[0]->searchTerm, $this->logger);
         $this->assertSame(1, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(1, count($channelRepository->findAll()));
     }
@@ -107,8 +112,8 @@ class FetchTest extends KernelTestCase
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
 
-        $this->fetch->fetch($this->data[0]->searchTerm);
-        $this->fetch->fetch($this->data[0]->searchTerm);
+        $this->fetch->fetch($this->data[0]->searchTerm, $this->logger);
+        $this->fetch->fetch($this->data[0]->searchTerm, $this->logger);
 
         $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(1, count($channelRepository->findAll()));
@@ -133,8 +138,8 @@ class FetchTest extends KernelTestCase
         $this->assertSame(0, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(0, count($channelRepository->findAll()));
 
-        $this->fetch->fetch($this->data[0]->searchTerm);
-        $this->fetch->fetch($this->data[1]->searchTerm);
+        $this->fetch->fetch($this->data[0]->searchTerm, $this->logger);
+        $this->fetch->fetch($this->data[1]->searchTerm, $this->logger);
 
         $this->assertSame(2, count($channelSearchHistoryRepository->findAll()));
         $this->assertSame(2, count($channelRepository->findAll()));

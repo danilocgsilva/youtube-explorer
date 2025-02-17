@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Traits;
 
 use App\Services\Fetcher;
-use App\Mapper\GetVideoArray;
 use App\Data\FetcheResult;
+use Exception;
+use Psr\Log\LoggerInterface;
 
 trait FetchOnce
 {
     public function fetchSinglePagination(
         string $uploadsId,
+        LoggerInterface $logger,
         int $pagination = 50,
         string $nextPageToken = ""
     ): FetcheResult
@@ -21,24 +23,25 @@ trait FetchOnce
             $this->httpClient, 
             $pagination
         );
-        $fetcher->fetch($uploadsId, $nextPageToken);
+
+        $trial = 0;
+        $maxTrial = 3;
+        $executed = false;
+        $exceptionIfAny = null;
+        while (!$executed && $trial < $maxTrial) {
+            try {
+                $fetcher->fetch($uploadsId, $nextPageToken);
+                $executed = true;
+            } catch (Exception $e) {
+                $logger->warning("Failed to fetch pagination content. Trial: {$trial}.");
+                $exceptionIfAny = $e;
+                $trial++;
+            }
+        }
+        if (!$executed) {
+            throw $exceptionIfAny;
+        }
 
         return $fetcher->getResults();
-
-        // $this->persistChannel($results, $channelSearchTerm);
-
-        // $capturedChannel = $this->captureChannel($results, $channelSearchTerm);
-
-        // $videosArrayGetter = new GetVideoArray($results);
-        // $videosArrayGetter->setChannel($capturedChannel);
-
-        // /** @var array<\App\Entity\Video> */
-        // $videos = $videosArrayGetter->getVideos();
-        // foreach ($videos as $video) {
-        //     $this->entityManager->persist($video);
-        // }
-        // $this->entityManager->flush();
-
-        // return $results;
     }
 }

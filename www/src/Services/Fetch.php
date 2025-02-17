@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Data\FetcheResult;
-use App\Mapper\GetVideoArray;
-use App\Services\WebClientInterface;
-use App\Traits\PersistVideosFetchedTrait;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\ChannelSearchHistory;
-use App\Entity\Channel;
 use App\Repository\ChannelRepository;
 use App\Repository\VideoRepository;
-use Exception;
-use DateTime;
+use App\Services\WebClientInterface;
+use App\Traits\PersistVideosFetchedTrait;
 use App\Traits\FetchOnce;
 use App\Traits\CaptureChannelTrait;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use Psr\Log\LoggerInterface;
+use App\Traits\GetUploadsTrait;
 
 class Fetch
 {
     use FetchOnce;
     use PersistVideosFetchedTrait;
     use CaptureChannelTrait;
+    use GetUploadsTrait;
 
     public function __construct(
         private string $apiKey,
@@ -33,27 +31,29 @@ class Fetch
     ) {
     }
 
-    public function fetch(string $channelSearchTerm): mixed
+    public function fetch(string $channelSearchTerm, LoggerInterface $logger): mixed
     {
         // $pagination = 50;
         
         $uploadsId = $this->getUploads($channelSearchTerm);
 
-        $resultsList = $this->fetchAll(
-            $uploadsId,
-            30,
-            $this->apiKey,
-            $this->httpClient,
-            $this->entityManager,
-            $channelSearchTerm
-        );
-        $results = $resultsList[0];
-
-        // /** @var \App\Data\FetcheResult */
-        // $results = $this->fetchSinglePagination(
+        // $resultsList = $this->fetchAll(
         //     $uploadsId,
-        //     50
+        //     30,
+        //     $this->apiKey,
+        //     $this->httpClient,
+        //     $this->entityManager,
+        //     $channelSearchTerm,
+        //     $logger
         // );
+        // $results = $resultsList[0];
+
+        /** @var \App\Data\FetcheResult */
+        $results = $this->fetchSinglePagination(
+            $uploadsId,
+            $logger,
+            50
+        );
 
         /** @var \App\Entity\Channel */
         $capturedChannel = $this->captureChannel($results, $channelSearchTerm, $this->channelRepository);
@@ -80,7 +80,8 @@ class Fetch
         string $apiKey,
         WebClientInterface $webClient,
         EntityManagerInterface $entityManager,
-        string $channelSearchTerm
+        string $channelSearchTerm,
+        LoggerInterface $logger
     ): array
     {
         $fetchAllVideos = new FetchAllVideos(
@@ -88,7 +89,8 @@ class Fetch
             $pagination,
             $apiKey,
             $webClient,
-            $entityManager
+            $entityManager,
+            $logger
         );
 
         return $fetchAllVideos->fetchAllVideos(
@@ -97,47 +99,47 @@ class Fetch
         );
     }
 
-    private function getUploads(string $youtubeChannel)
-    {
-        if ($this->isChannelName($youtubeChannel)) {
-            $channelId = $this->getChannelIdByName($youtubeChannel);
-        } else {
-            $channelId = $youtubeChannel;
-        }
+    // private function getUploads(string $youtubeChannel)
+    // {
+    //     if ($this->isChannelName($youtubeChannel)) {
+    //         $channelId = $this->getChannelIdByName($youtubeChannel);
+    //     } else {
+    //         $channelId = $youtubeChannel;
+    //     }
 
-        $urlIdList = sprintf(
-            'https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=%s&key=%s',
-            $channelId,
-            $this->apiKey
-        );
+    //     $urlIdList = sprintf(
+    //         'https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=%s&key=%s',
+    //         $channelId,
+    //         $this->apiKey
+    //     );
 
-        $contents = json_decode($this->httpClient->getContentString($urlIdList));
+    //     $contents = json_decode($this->httpClient->getContentString($urlIdList));
 
-        if (!empty($contents->items)) {
-            return $contents->items[0]->contentDetails->relatedPlaylists->uploads;
-        }
-        throw new Exception('Could not get uploads playlist ID');
-    }
+    //     if (!empty($contents->items)) {
+    //         return $contents->items[0]->contentDetails->relatedPlaylists->uploads;
+    //     }
+    //     throw new Exception('Could not get uploads playlist ID');
+    // }
 
-    private function isChannelName(string $youtubeChannel)
-    {
-        return $youtubeChannel[0] === "@";
-    }
+    // private function isChannelName(string $youtubeChannel)
+    // {
+    //     return $youtubeChannel[0] === "@";
+    // }
 
-    private function getChannelIdByName(string $channelName): string
-    {
-        $channelNameSeatch = ltrim($channelName, "@");
-        $urlChannelId = sprintf(
-            "https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=channel&key=%s&maxResults=10",
-            $channelNameSeatch,
-            $this->apiKey
-        );
+    // private function getChannelIdByName(string $channelName): string
+    // {
+    //     $channelNameSeatch = ltrim($channelName, "@");
+    //     $urlChannelId = sprintf(
+    //         "https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=channel&key=%s&maxResults=10",
+    //         $channelNameSeatch,
+    //         $this->apiKey
+    //     );
 
-        $clientContent = $this->httpClient->getContentString($urlChannelId);
-        $contents = json_decode($clientContent);
+    //     $clientContent = $this->httpClient->getContentString($urlChannelId);
+    //     $contents = json_decode($clientContent);
 
-        return $contents->items[0]->id->channelId;
-    }
+    //     return $contents->items[0]->id->channelId;
+    // }
 
     // private function persistChannel(FetcheResult $results, string $channelSearchTerm): void
     // {

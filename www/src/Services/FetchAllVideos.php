@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Data\FetcheResult;
+use App\Repository\ChannelRepository;
 use App\Traits\CaptureChannelTrait;
 use App\Traits\FetchOnce;
 use App\Traits\GetByUploadsIdsTrait;
-use DateTime;
-use App\Data\Video;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Mapper\GetVideoArray;
-use App\Data\FetcheResult;
-use App\Repository\ChannelRepository;
 use App\Traits\PersistVideosFetchedTrait;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class FetchAllVideos
 {
@@ -32,14 +30,22 @@ class FetchAllVideos
         private string $apiKey,
         private WebClientInterface $httpClient,
         private EntityManagerInterface $entityManager,
+        private LoggerInterface $logger
     ) {
     }
 
-    public function fetchAllVideos(string $channelSearchTerm, ChannelRepository $channelRepository): array
+    public function fetchAllVideos(
+        string $channelSearchTerm, 
+        ChannelRepository $channelRepository
+    ): array
     {
         $fetchesResults = [];
         while ($results = $this->fetchNext()) {
-            $capturedChannel = $this->captureChannel($results, $channelSearchTerm, $channelRepository);
+            $capturedChannel = $this->captureChannel(
+                $results, 
+                $channelSearchTerm, 
+                $channelRepository
+            );
             $this->persistChannel($results, $channelSearchTerm);
     
             $this->persistVideos($results, $capturedChannel);
@@ -76,9 +82,9 @@ class FetchAllVideos
 
     private function fetchNext(): FetcheResult|null
     {
-        if ($this->count >= 4) {
-            throw new \Exception("Enough!");
-        }
+        // if ($this->count >= 4) {
+        //     throw new \Exception("Enough!");
+        // }
         // return $this->getByUploadsIds(
         //     $this->uploadsId,
         //     $this->pagination,
@@ -87,7 +93,12 @@ class FetchAllVideos
         //     $this->nextPageToken
         // );
 
-        $results = $this->fetchSinglePagination($this->uploadsId, $this->pagination, $this->nextPageToken);
+        $results = $this->fetchSinglePagination(
+            $this->uploadsId,
+            $this->logger,
+            $this->pagination,
+            $this->nextPageToken
+        );
         if (!$results->nextPageToken) {
             return null;
         }

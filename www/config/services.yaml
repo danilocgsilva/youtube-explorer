@@ -16,10 +16,16 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        # resource: '../tests/ServicesTest/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\MessageHandler\FetchAllVideosFromYoutubeChannelHandler:
+        arguments:
+            $apiKey: '%env(GOOGLE_CLOUD_API_KEY)%'
+            $httpClient: '@web_client.client'
 
     App\Services\Fetch:
         arguments:
@@ -41,7 +47,8 @@ when@test:
             class: App\Tests\Mocks\ClientMock
 
         logger.mock:
-            class: App\Tests\Mocks\LoggerMock
+            class: App\Tests\ServicesTest\LoggerMock
+            public: true
 
         # web_client.client:
         #     class: App\Tests\Mocks\Services\WebClientMock

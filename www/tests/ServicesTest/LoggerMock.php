@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Mocks;
+namespace App\Tests\ServicesTest;
 
 use Psr\Log\LoggerInterface;
 
