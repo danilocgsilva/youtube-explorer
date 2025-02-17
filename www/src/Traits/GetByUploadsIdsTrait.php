@@ -12,7 +12,8 @@ trait GetByUploadsIdsTrait
         string $uploadsId,
         int $pagination,
         string $apiKey,
-        WebClientInterface $httpClient
+        WebClientInterface $httpClient,
+        string $pageToken = ""
     ): string
     {
         $urlToPaylist = sprintf(
@@ -21,6 +22,11 @@ trait GetByUploadsIdsTrait
             $uploadsId,
             $apiKey
         );
+
+        if (empty($pageToken)) {
+            $urlToPaylist .= "&pageToken={$pageToken}";
+        }
+        
         return $httpClient->getContentString($urlToPaylist);
     }
 }

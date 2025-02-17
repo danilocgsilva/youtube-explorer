@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Traits\FetchOnce;
 use App\Traits\GetByUploadsIdsTrait;
 use DateTime;
 use App\Data\Video;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Mapper\GetVideoArray;
 
 class FetchAllVideos
 {
     use GetByUploadsIdsTrait;
+    use FetchOnce;
 
     private $count = 0;
 
@@ -26,7 +29,8 @@ class FetchAllVideos
 
     public function fetchAllVideos()
     {
-        while ($rawContentsString = $this->fetchNext()) {
+        $pageToken = "";
+        while ($rawContentsString = $this->fetchNext($pageToken)) {
             $contents = json_decode($rawContentsString);
 
             $this->channelVideoCount = $contents->pageInfo->totalResults;
@@ -45,10 +49,14 @@ class FetchAllVideos
                 $this->entityManager->persist($videoLoop);
             }
             $this->entityManager->flush();
+
+            // $this->fetchSinglePagination(
+            //     $this->uploadsId,
+            // );
         }
     }
 
-    private function fetchNext(): string
+    private function fetchNext(string $pageToken): string
     {
         if ($this->count >= 3) {
             return "";
@@ -57,7 +65,8 @@ class FetchAllVideos
             $this->uploadsId,
             $this->pagination,
             $this->apiKey,
-            $this->httpClient
+            $this->httpClient,
+            $pageToken
         );
     }
 }

@@ -6,17 +6,22 @@ namespace App\Services;
 
 use App\Data\FetcheResult;
 use App\Mapper\GetVideoArray;
-use Exception;
 use App\Services\WebClientInterface;
+use App\Traits\PersistVideosFetchedTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\ChannelSearchHistory;
-use DateTime;
 use App\Entity\Channel;
 use App\Repository\ChannelRepository;
 use App\Repository\VideoRepository;
+use Exception;
+use DateTime;
+use App\Traits\FetchOnce;
 
 class Fetch
 {
+    use FetchOnce;
+    use PersistVideosFetchedTrait;
+
     public function __construct(
         private string $apiKey,
         private WebClientInterface $httpClient,
@@ -26,55 +31,62 @@ class Fetch
     ) {
     }
 
-    public function fetch(string $channelSearchTerm): FetcheResult
+    public function fetch(string $channelSearchTerm): mixed
     {
+        $pagination = 50;
+        
         $uploadsId = $this->getUploads($channelSearchTerm);
 
-        $this->fetchAll($uploadsId);
-
-        // $results = $this->fetchWithoutPagination(
+        // $this->fetchAll(
         //     $uploadsId,
-        //     $channelSearchTerm
+        //     $pagination,
+        //     $this->apiKey,w
+        //     $this->httpClient,
+        //     $this->entityManager
         // );
 
+        /** @var \App\Data\FetcheResult */
+        $results = $this->fetchSinglePagination(
+            $uploadsId,
+            $channelSearchTerm,
+            $pagination
+        );
+
+        /** @var \App\Entity\Channel */
+        $capturedChannel = $this->captureChannel($results, $channelSearchTerm);
+        $this->persistChannel($results, $channelSearchTerm);
+
+        $this->persistVideos($results, $capturedChannel);
+
+        // $videosArrayGetter = new GetVideoArray($results);
+        // $videosArrayGetter->setChannel($capturedChannel);
+
+        // /** @var array<\App\Entity\Video> */
+        // $videos = $videosArrayGetter->getVideos();
+        // foreach ($videos as $video) {
+        //     $this->entityManager->persist($video);
+        // }
+        // $this->entityManager->flush();
+
         return $results;
     }
 
-    private function fetchAll(string $uploadsId)
+    private function fetchAll(
+        string $uploadsId,
+        int $pagination,
+        string $apiKey,
+        WebClientInterface $webClient,
+        EntityManagerInterface $entityManager
+    ): void
     {
         $fetchAllVideos = new FetchAllVideos(
-            $uploadsId
-        )
-    }
-
-    private function fetchWithoutPagination(
-        string $uploadsId,
-        string $channelSearchTerm
-    )
-    {
-        $fetcher = new Fetcher(
-            $this->apiKey, 
-            $this->httpClient, 
-            50
+            $uploadsId,
+            $pagination,
+            $apiKey,
+            $webClient,
+            $entityManager
         );
-        $fetcher->fetch($uploadsId);
-        $results = $fetcher->getResults();
-
-        $this->persist($results, $channelSearchTerm);
-
-        $capturedChannel = $this->captureChannel($results, $channelSearchTerm);
-
-        $videosArrayGetter = new GetVideoArray($results);
-        $videosArrayGetter->setChannel($capturedChannel);
-
-        /** @var array<\App\Entity\Video> */
-        $videos = $videosArrayGetter->getVideos();
-        foreach ($videos as $video) {
-            $this->entityManager->persist($video);
-        }
-        $this->entityManager->flush();
-
-        return $results;
+        $fetchAllVideos->fetchAllVideos();
     }
 
     private function getUploads(string $youtubeChannel)
@@ -119,7 +131,7 @@ class Fetch
         return $contents->items[0]->id->channelId;
     }
 
-    private function persist(FetcheResult $results, string $channelSearchTerm): void
+    private function persistChannel(FetcheResult $results, string $channelSearchTerm): void
     {
         $channelSearchHistory = (new ChannelSearchHistory())
             ->setChannelId($results->channelId)

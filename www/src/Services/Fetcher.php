@@ -62,8 +62,7 @@ class Fetcher
 
         foreach ($contents->items as $item) {
             $this->videosList[] = new Video(
-                $item->snippet->title,
-                
+               $item->snippet->title,
                DateTime::createFromFormat("Y-m-d\TH:i:s\Z", $item->contentDetails->videoPublishedAt),
                $item->contentDetails->videoPublishedAt,
                $item->contentDetails->videoId
