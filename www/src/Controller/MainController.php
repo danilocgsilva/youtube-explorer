@@ -13,7 +13,7 @@ use Symfony\Component\{
     Messenger\MessageBusInterface
 };
 use Psr\Log\LoggerInterface;
-use Exception;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use App\Message\FetchAllVideosFromYoutubeChannel;
 
 final class MainController extends AbstractController
@@ -40,15 +40,16 @@ final class MainController extends AbstractController
     #[Route('/channel_id/async', name: 'app_process_async')]
     public function processAsync(
         Request $request, 
-        LoggerInterface $logger,
         MessageBusInterface $messageBus
-    )
+    ): RedirectResponse
     {
         if (!$this->isCsrfTokenValid('search-term', $request->get("token"))) {
             throw $this->createNotFoundException();
         }
 
-        $messageBus->dispatch(new FetchAllVideosFromYoutubeChannel($request->get("youtube-channel-id")));
+        $messageBus->dispatch(
+            new FetchAllVideosFromYoutubeChannel($request->get("youtube-channel-id"))
+        );
 
         return $this->redirectToRoute('app_default');
     }

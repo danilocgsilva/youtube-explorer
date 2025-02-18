@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Data\FetchMethod;
 use App\Repository\ChannelSearchHistoryRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -27,6 +28,9 @@ class ChannelSearchHistory
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeInterface $whenFetched = null;
+
+    #[ORM\Column(nullable: true, enumType: FetchMethod::class)]
+    private ?FetchMethod $fetchMethod = null;
 
     public function getId(): ?int
     {
@@ -77,6 +81,18 @@ class ChannelSearchHistory
     public function setWhenFetched(\DateTimeInterface $whenFetched): static
     {
         $this->whenFetched = $whenFetched;
+
+        return $this;
+    }
+
+    public function getFetchMethod(): ?FetchMethod
+    {
+        return $this->fetchMethod;
+    }
+
+    public function setFetchMethod(?FetchMethod $fetchMethod): static
+    {
+        $this->fetchMethod = $fetchMethod;
 
         return $this;
     }

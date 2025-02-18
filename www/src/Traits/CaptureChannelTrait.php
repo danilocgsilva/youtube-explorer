@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Traits;
 
 use App\Data\FetcheResult;
+use App\Data\FetchMethod;
 use App\Entity\Channel;
 use App\Repository\ChannelRepository;
 use App\Entity\ChannelSearchHistory;
@@ -51,13 +52,14 @@ trait CaptureChannelTrait
         return $channel;
     }
 
-    private function persistChannel(FetcheResult $results, string $channelSearchTerm): void
+    private function persistChannelSearchHistory(FetcheResult $results, string $channelSearchTerm): void
     {
         $channelSearchHistory = (new ChannelSearchHistory())
             ->setChannelId($results->channelId)
             ->setChannelName($results->channelTitle)
             ->setSearchTerm($channelSearchTerm)
-            ->setWhenFetched(new DateTime());
+            ->setWhenFetched(new DateTime())
+            ->setFetchMethod(FetchMethod::SINGLE_FETCH);
 
         $this->entityManager->persist($channelSearchHistory);
         $this->entityManager->flush();
