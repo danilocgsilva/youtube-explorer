@@ -22,8 +22,22 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Services\MassFetchManager:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    App\Services\FetchAllVideos:
+        arguments:
+            $apiKey: '%env(GOOGLE_CLOUD_API_KEY)%'
+            $httpClient: '@web_client.client'
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+            $massFetchManager: '@App\Services\MassFetchManager'
+
     App\MessageHandler\FetchAllVideosFromYoutubeChannelHandler:
         arguments:
+            $channelRepository: '@App\Repository\ChannelRepository'
+            $fetchAllVideos: '@App\Services\FetchAllVideos'
             $apiKey: '%env(GOOGLE_CLOUD_API_KEY)%'
             $httpClient: '@web_client.client'
 

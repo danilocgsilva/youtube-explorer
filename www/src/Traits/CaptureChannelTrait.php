@@ -52,14 +52,18 @@ trait CaptureChannelTrait
         return $channel;
     }
 
-    private function persistChannelSearchHistory(FetcheResult $results, string $channelSearchTerm): void
+    private function persistChannelSearchHistory(
+        FetcheResult $results, 
+        string $channelSearchTerm,
+        FetchMethod $fetchMethod
+    ): void
     {
         $channelSearchHistory = (new ChannelSearchHistory())
             ->setChannelId($results->channelId)
             ->setChannelName($results->channelTitle)
             ->setSearchTerm($channelSearchTerm)
             ->setWhenFetched(new DateTime())
-            ->setFetchMethod(FetchMethod::SINGLE_FETCH);
+            ->setFetchMethod($fetchMethod);
 
         $this->entityManager->persist($channelSearchHistory);
         $this->entityManager->flush();

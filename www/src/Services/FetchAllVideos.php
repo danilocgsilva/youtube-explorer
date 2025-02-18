@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\FetcheResult;
+use App\Data\FetchMethod;
 use App\Repository\ChannelRepository;
 use App\Traits\CaptureChannelTrait;
 use App\Traits\FetchOnce;
@@ -25,52 +26,66 @@ class FetchAllVideos
     private int $count = 0;
 
     public function __construct(
-        private string $uploadsId,
-        private int $pagination,
         private string $apiKey,
         private WebClientInterface $httpClient,
         private EntityManagerInterface $entityManager,
         private LoggerInterface $logger,
+        private MassFetchManager $massFetchManager,
         private int $limit = 0
     ) {
     }
 
+    public function setLimit(int $limit): self
+    {
+        $this->limit = $limit;
+        
+        return $this;
+    }
+
     public function fetchAllVideos(
+        string $uploadsId,
         string $channelSearchTerm, 
-        ChannelRepository $channelRepository
+        ChannelRepository $channelRepository,
+        int $pagination = 30
     ): array
     {
         $fetchesResults = [];
-        while ($results = $this->fetchNext()) {
+        $this->massFetchManager->start();
+        while ($results = $this->fetchNext($pagination, $uploadsId)) {
             $capturedChannel = $this->captureChannel(
                 $results, 
                 $channelSearchTerm, 
                 $channelRepository
             );
-            $this->persistChannel($results, $channelSearchTerm);
+            $this->persistChannelSearchHistory(
+                $results, 
+                $channelSearchTerm,
+                FetchMethod::MASS_FETCH
+            );
     
             $this->persistVideos($results, $capturedChannel);
             
             $fetchesResults[] = $results;
         }
+        $this->massFetchManager->finish();
 
         return $fetchesResults;
     }
 
 
 
-    private function fetchNext(): FetcheResult|null
+    private function fetchNext(int $pagination, string $uploadsId): FetcheResult|null
     {
         $results = $this->fetchSinglePagination(
-            $this->uploadsId,
+            $uploadsId,
             $this->logger,
-            $this->pagination,
+            $pagination,
             $this->nextPageToken
         );
         if (
             (!$results->nextPageToken && $this->limit === 0)
             ||
-            (!$results->nextPageToken && $this->limit !== 0 && $this->count <= $this->limit)
+            (!$results->nextPageToken || ($this->limit !== 0 && $this->count >= $this->limit))
         ) {
             return null;
         }
@@ -78,6 +93,4 @@ class FetchAllVideos
         $this->count++;
         return $results;
     }
-
-
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Data\FetchMethod;
 use App\Repository\ChannelRepository;
 use App\Repository\VideoRepository;
 use App\Services\WebClientInterface;
@@ -14,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Psr\Log\LoggerInterface;
 use App\Traits\GetUploadsTrait;
+use App\Services\FetchAllVideos;
 
 class Fetch
 {
@@ -27,7 +29,8 @@ class Fetch
         private WebClientInterface $httpClient,
         private EntityManagerInterface $entityManager,
         private ChannelRepository $channelRepository,
-        private VideoRepository $videoRepository
+        private VideoRepository $videoRepository,
+        private FetchAllVideos $fetchAllVideos
     ) {
     }
 
@@ -48,35 +51,14 @@ class Fetch
             $channelSearchTerm, 
             $this->channelRepository
         );
-        $this->persistChannelSearchHistory($results, $channelSearchTerm);
+        $this->persistChannelSearchHistory(
+            $results, 
+            $channelSearchTerm,
+            FetchMethod::SINGLE_FETCH
+        );
 
         $this->persistVideos($results, $capturedChannel);
 
         return $results;
-    }
-
-    private function fetchAll(
-        string $uploadsId,
-        int $pagination,
-        string $apiKey,
-        WebClientInterface $webClient,
-        EntityManagerInterface $entityManager,
-        string $channelSearchTerm,
-        LoggerInterface $logger
-    ): array
-    {
-        $fetchAllVideos = new FetchAllVideos(
-            $uploadsId,
-            $pagination,
-            $apiKey,
-            $webClient,
-            $entityManager,
-            $logger
-        );
-
-        return $fetchAllVideos->fetchAllVideos(
-            $channelSearchTerm, 
-            $this->channelRepository
-        );
     }
 }
