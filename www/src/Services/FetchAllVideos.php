@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Data\FetcheResult;
 use App\Data\FetchMethod;
+use App\Entity\MassFetchIteration;
 use App\Repository\ChannelRepository;
 use App\Traits\CaptureChannelTrait;
 use App\Traits\FetchOnce;
@@ -13,6 +14,7 @@ use App\Traits\GetByUploadsIdsTrait;
 use App\Traits\PersistVideosFetchedTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use DateTime;
 
 class FetchAllVideos
 {
@@ -24,6 +26,8 @@ class FetchAllVideos
     private string $nextPageToken = "";
 
     private int $count = 0;
+
+    private FetcheResult $resultsIteration;
 
     public function __construct(
         private string $apiKey,
@@ -51,21 +55,24 @@ class FetchAllVideos
     {
         $fetchesResults = [];
         $this->massFetchManager->start();
-        while ($results = $this->fetchNext($pagination, $uploadsId)) {
+        while ($this->fetchNext($pagination, $uploadsId)) {
+
+            $this->persistMassFetchInteration();
+
             $capturedChannel = $this->captureChannel(
-                $results, 
+                $this->resultsIteration, 
                 $channelSearchTerm, 
                 $channelRepository
             );
             $this->persistChannelSearchHistory(
-                $results, 
+                $this->resultsIteration, 
                 $channelSearchTerm,
                 FetchMethod::MASS_FETCH
             );
     
-            $this->persistVideos($results, $capturedChannel);
+            $this->persistVideos($this->resultsIteration, $capturedChannel);
             
-            $fetchesResults[] = $results;
+            $fetchesResults[] = $this->resultsIteration;
         }
         $this->massFetchManager->finish();
 
@@ -74,23 +81,35 @@ class FetchAllVideos
 
 
 
-    private function fetchNext(int $pagination, string $uploadsId): FetcheResult|null
+    private function fetchNext(int $pagination, string $uploadsId): bool
     {
-        $results = $this->fetchSinglePagination(
+        $this->resultsIteration = $this->fetchSinglePagination(
             $uploadsId,
             $this->logger,
             $pagination,
             $this->nextPageToken
         );
+
+        $this->nextPageToken = $this->resultsIteration->nextPageToken;
+
         if (
-            (!$results->nextPageToken && $this->limit === 0)
+            (!$this->resultsIteration->nextPageToken && $this->limit === 0)
             ||
-            (!$results->nextPageToken || ($this->limit !== 0 && $this->count >= $this->limit))
+            (!$this->resultsIteration->nextPageToken || ($this->limit !== 0 && $this->count > $this->limit))
         ) {
-            return null;
+            return false;
         }
-        $this->nextPageToken = $results->nextPageToken;
+        
         $this->count++;
-        return $results;
+        return true;
+    }
+
+    private function persistMassFetchInteration()
+    {
+        $massFetchIteration = (new MassFetchIteration())
+            ->setTime(new DateTime())
+            ->setNextPageToken($this->resultsIteration->nextPageToken);
+        $this->entityManager->persist($massFetchIteration);
+        $this->entityManager->flush();
     }
 }

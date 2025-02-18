@@ -72,7 +72,8 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
-        "phpunit": "php -dxdebug.mode=off vendor/bin/phpunit"
+        "phpunit": "php -dxdebug.mode=off vendor/bin/phpunit",
+        "on_queue": "php -dxdebug.mode=off -dset_time_limit=0 bin/console messenger:consume -vv"
     },
     "conflict": {
         "symfony/symfony": "*"

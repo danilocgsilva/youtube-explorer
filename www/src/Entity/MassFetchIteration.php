@@ -17,6 +17,9 @@ class MassFetchIteration
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $time = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nextPageToken = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -30,6 +33,18 @@ class MassFetchIteration
     public function setTime(\DateTimeInterface $time): static
     {
         $this->time = $time;
+
+        return $this;
+    }
+
+    public function getNextPageToken(): ?string
+    {
+        return $this->nextPageToken;
+    }
+
+    public function setNextPageToken(?string $nextPageToken): static
+    {
+        $this->nextPageToken = $nextPageToken;
 
         return $this;
     }
