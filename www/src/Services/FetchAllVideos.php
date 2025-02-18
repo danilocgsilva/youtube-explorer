@@ -20,9 +20,9 @@ class FetchAllVideos
     use PersistVideosFetchedTrait;
     use CaptureChannelTrait;
 
-    private $count = 0;
-
     private string $nextPageToken = "";
+
+    private int $count = 0;
 
     public function __construct(
         private string $uploadsId,
@@ -30,7 +30,8 @@ class FetchAllVideos
         private string $apiKey,
         private WebClientInterface $httpClient,
         private EntityManagerInterface $entityManager,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private int $limit = 0
     ) {
     }
 
@@ -51,28 +52,6 @@ class FetchAllVideos
             $this->persistVideos($results, $capturedChannel);
             
             $fetchesResults[] = $results;
-            // $contents = json_decode($rawContentsString);
-
-            // $this->channelVideoCount = $contents->pageInfo->totalResults;
-
-            // $this->channelName = $contents->items[0]->snippet->channelTitle;
-
-            // $this->channelId = $contents->items[0]->snippet->channelId;
-
-            // foreach ($contents->items as $item) {
-            //     $videoLoop = new Video(
-            //         $item->snippet->title,
-            //         DateTime::createFromFormat("Y-m-d\TH:i:s\Z", $item->contentDetails->videoPublishedAt),
-            //         $item->contentDetails->videoPublishedAt,
-            //         $item->contentDetails->videoId
-            //     );
-            //     $this->entityManager->persist($videoLoop);
-            // }
-            // $this->entityManager->flush();
-
-            // $this->fetchSinglePagination(
-            //     $this->uploadsId,
-            // );
         }
 
         return $fetchesResults;
@@ -82,24 +61,17 @@ class FetchAllVideos
 
     private function fetchNext(): FetcheResult|null
     {
-        // if ($this->count >= 4) {
-        //     throw new \Exception("Enough!");
-        // }
-        // return $this->getByUploadsIds(
-        //     $this->uploadsId,
-        //     $this->pagination,
-        //     $this->apiKey,
-        //     $this->httpClient,
-        //     $this->nextPageToken
-        // );
-
         $results = $this->fetchSinglePagination(
             $this->uploadsId,
             $this->logger,
             $this->pagination,
             $this->nextPageToken
         );
-        if (!$results->nextPageToken) {
+        if (
+            (!$results->nextPageToken && $this->limit === 0)
+            ||
+            (!$results->nextPageToken && $this->limit !== 0 && $this->count <= $this->limit)
+        ) {
             return null;
         }
         $this->nextPageToken = $results->nextPageToken;

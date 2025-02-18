@@ -6,9 +6,6 @@ namespace App\Controller;
 
 use App\Services\Fetch;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-// use Symfony\Component\HttpFoundation\Response;
-// use Symfony\Component\Routing\Attribute\Route;
-// use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\{
     HttpFoundation\Response,
     Routing\Attribute\Route,
@@ -53,11 +50,6 @@ final class MainController extends AbstractController
 
         $messageBus->dispatch(new FetchAllVideosFromYoutubeChannel($request->get("youtube-channel-id")));
 
-        // return $this->render('main/list.html.twig', [
-        //     'videos_list' => $videosList,
-        // ]);
-
         return $this->redirectToRoute('app_default');
-
     }
 }
