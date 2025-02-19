@@ -54,6 +54,12 @@ class FetchAllVideos
         return $this;
     }
 
+    public function setNextPageToken(string $nextPageToken)
+    {
+        $this->nextPageToken = $nextPageToken;
+        return $this;
+    }
+
     public function fetchAllVideos(
         string $uploadsId,
         string $channelSearchTerm, 
@@ -110,7 +116,7 @@ class FetchAllVideos
         if (
             (!$this->resultsIteration->nextPageToken && $this->limit === 0)
             ||
-            (!$this->resultsIteration->nextPageToken || ($this->limit !== 0 && $this->count > $this->limit))
+            (!$this->resultsIteration->nextPageToken || ($this->limit !== 0 && $this->count >= $this->limit))
         ) {
             return false;
         }

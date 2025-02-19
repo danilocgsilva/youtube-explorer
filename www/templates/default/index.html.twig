@@ -4,19 +4,45 @@
     Fetch videos
 {% endblock %}
 
-{% block h1_header %}Fetch youtube videos{% endblock %}
+{% block h1_header %}
+    Fetch youtube videos
+{% endblock %}
 
 {% block body %}
 
-    <p><a href="{{ path('app_channels_list') }}">Channels listing</a></p>
+    <p>
+        <a href="{{ path('app_channels_list') }}">
+            Channels listing
+        </a>
+    </p>
 
     <form action="{{ path('app_process_async') }}" method="GET">
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="youtube-channel-id">
                 Youtube Channel Id
             </label>
-            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="youtube-channel-id" name="youtube-channel-id" type="text" />
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="youtube-channel-id" name="youtube-channel-id" type="text" placeholder="Fill here the Youtube channel alias or id" />
         </div>
+
+        <p>
+            Advanced settings
+        </p>
+
+        <div class="grid md:grid-cols-[20%_80%] md:gap-6">
+            <div class="relative z-0 w-full mb-5 group">
+                <label for="fetches_count" class="block text-gray-700 text-sm font-bold mb-2">
+                    Fetches count
+                </label>
+                <input type="text" name="fetches_count" id="fetches_count" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Set it blank to disable" value="3" required />
+            </div>
+            <div class="relative z-0 w-full mb-5 group">
+                <label for="next_page_token" class="block text-gray-700 text-sm font-bold mb-2">
+                    Next page token (if any)
+                </label>
+                <input type="text" name="next_page_token" id="next_page_token" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Can be set to blank" />
+            </div>
+        </div>
+
         <input type="hidden" name="token" value="{{ csrf_token("search-term") }}" />
         <div class="flex items-center justify-between">
             <input class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit" value="Fetch videos" />

@@ -25,7 +25,8 @@ final class FetchAllVideosFromYoutubeChannelHandler
     {
         $uploadsId = $uploadsId = $this->getUploads($message->searchTerm);
 
-        $this->fetchAllVideos->setLimit(3);
+        $this->fetchAllVideos->setLimit($message->fetchesCount);
+        $this->fetchAllVideos->setNextPageToken($message->nextPageToken);
 
         $this->fetchAllVideos->fetchAllVideos(
             $uploadsId,

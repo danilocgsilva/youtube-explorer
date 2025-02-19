@@ -48,7 +48,11 @@ final class MainController extends AbstractController
         }
 
         $messageBus->dispatch(
-            new FetchAllVideosFromYoutubeChannel($request->get("youtube-channel-id"))
+            new FetchAllVideosFromYoutubeChannel(
+                $request->get("youtube-channel-id"),
+                $request->get("fetches_count"),
+                $request->get("next_page_token")
+            )
         );
 
         return $this->redirectToRoute('app_default');
