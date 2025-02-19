@@ -14,30 +14,21 @@ class MassFetchIteration
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $time = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nextPageToken = null;
 
     #[ORM\ManyToOne(inversedBy: 'massFetchIterations')]
     private ?MassFetchJob $massFetchJob = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $iterationPosition = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $time = null;
+
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getTime(): ?\DateTimeInterface
-    {
-        return $this->time;
-    }
-
-    public function setTime(\DateTimeInterface $time): static
-    {
-        $this->time = $time;
-
-        return $this;
     }
 
     public function getNextPageToken(): ?string
@@ -60,6 +51,30 @@ class MassFetchIteration
     public function setMassFetchJob(?MassFetchJob $massFetchJob): static
     {
         $this->massFetchJob = $massFetchJob;
+
+        return $this;
+    }
+
+    public function getIterationPosition(): ?int
+    {
+        return $this->iterationPosition;
+    }
+
+    public function setIterationPosition(?int $iterationPosition): static
+    {
+        $this->iterationPosition = $iterationPosition;
+
+        return $this;
+    }
+
+    public function getTime(): ?\DateTimeInterface
+    {
+        return $this->time;
+    }
+
+    public function setTime(\DateTimeInterface $time): static
+    {
+        $this->time = $time;
 
         return $this;
     }

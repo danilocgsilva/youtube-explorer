@@ -55,9 +55,10 @@ class FetchAllVideos
     {
         $fetchesResults = [];
         $this->massFetchManager->start();
+        $iterationPosition = 1;
         while ($this->fetchNext($pagination, $uploadsId)) {
 
-            $this->persistMassFetchInteration();
+            $this->persistMassFetchInteration($iterationPosition);
 
             $capturedChannel = $this->captureChannel(
                 $this->resultsIteration, 
@@ -73,6 +74,7 @@ class FetchAllVideos
             $this->persistVideos($this->resultsIteration, $capturedChannel);
             
             $fetchesResults[] = $this->resultsIteration;
+            $iterationPosition++;
         }
         $this->massFetchManager->finish();
 
@@ -102,12 +104,14 @@ class FetchAllVideos
         return true;
     }
 
-    private function persistMassFetchInteration()
+    private function persistMassFetchInteration(int $iterationPosition)
     {
         $massFetchIteration = (new MassFetchIteration())
-            ->setTime(new DateTime())
+            ->setTime(DateTime::createFromFormat('U.u', (string)microtime(true)))
             ->setNextPageToken($this->resultsIteration->nextPageToken)
-            ->setMassFetchJob();
+            ->setMassFetchJob($this->massFetchManager->getMassFetchJob())
+            ->setIterationPosition($iterationPosition);
+    
         $this->entityManager->persist($massFetchIteration);
         $this->entityManager->flush();
     }

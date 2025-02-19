@@ -55,6 +55,10 @@ services:
             $client: '@guzzle_http.client'
             $logger: '@logger'
 
+    mass_fetch_iteration_repository:
+        class: App\Repository\MassFetchIterationRepository
+        public: true
+
 when@test:
     services:
         guzzle_http.client:

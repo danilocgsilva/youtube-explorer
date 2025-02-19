@@ -13,12 +13,11 @@
         "doctrine/orm": "^3.3.2",
         "guzzlehttp/guzzle": "^7.9.2",
         "symfony/asset": "7.2.*",
-        "symfony/console": "7.2.*",
         "symfony/doctrine-messenger": "7.2.*",
         "symfony/dotenv": "7.2.*",
         "symfony/flex": "^2.4.7",
         "symfony/framework-bundle": "7.2.*",
-        "symfony/messenger": "^7.2",
+        "symfony/messenger": "^7.2.3",
         "symfony/monolog-bundle": "^3.10",
         "symfony/runtime": "7.2.*",
         "symfony/security-csrf": "7.2.*",
@@ -27,7 +26,9 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.6.22",
+        "psy/psysh": "^0.12.7",
         "symfony/browser-kit": "7.2.*",
+        "symfony/console": "7.2.*",
         "symfony/css-selector": "7.2.*",
         "symfony/maker-bundle": "^1.62.1",
         "symfony/phpunit-bridge": "^7.2"
@@ -73,7 +74,8 @@
             "@auto-scripts"
         ],
         "phpunit": "php -dxdebug.mode=off vendor/bin/phpunit",
-        "on_queue": "php -dxdebug.mode=off -dset_time_limit=0 bin/console messenger:consume -vv"
+        "on_queue": "php -dxdebug.mode=off -dset_time_limit=0 bin/console messenger:consume -vv",
+        "migrate": "php -dxdebug.mode=off bin/console doctrine:migrations:migrate --no-interaction"
     },
     "conflict": {
         "symfony/symfony": "*"
