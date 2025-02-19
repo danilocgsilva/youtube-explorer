@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Data\FetcheResult;
-use App\Data\FetchMethod;
-use App\Entity\MassFetchIteration;
+use App\Data\{
+    FetcheResult,
+    FetchMethod
+};
+use App\Entity\{
+    ChannelData, 
+    MassFetchIteration,
+    Channel
+};
 use App\Repository\ChannelRepository;
-use App\Traits\CaptureChannelTrait;
-use App\Traits\FetchOnce;
-use App\Traits\GetByUploadsIdsTrait;
-use App\Traits\PersistVideosFetchedTrait;
+use App\Traits\{
+    CaptureChannelTrait,
+    FetchOnce,
+    GetByUploadsIdsTrait,
+    PersistVideosFetchedTrait
+};
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use DateTime;
@@ -56,15 +64,21 @@ class FetchAllVideos
         $fetchesResults = [];
         $this->massFetchManager->start();
         $iterationPosition = 1;
+        $channelDataFetched = false;
+
         while ($this->fetchNext($pagination, $uploadsId)) {
-
-            $this->persistMassFetchInteration($iterationPosition);
-
             $capturedChannel = $this->captureChannel(
                 $this->resultsIteration, 
                 $channelSearchTerm, 
                 $channelRepository
             );
+            if (!$channelDataFetched) {
+                $this->fetchChannelData($capturedChannel);
+                $channelDataFetched = true;
+            }
+            $this->persistMassFetchInteration($iterationPosition);
+
+
             $this->persistChannelSearchHistory(
                 $this->resultsIteration, 
                 $channelSearchTerm,
@@ -77,6 +91,7 @@ class FetchAllVideos
             $iterationPosition++;
         }
         $this->massFetchManager->finish();
+        $channelDataFetched = false;
 
         return $fetchesResults;
     }
@@ -113,6 +128,17 @@ class FetchAllVideos
             ->setIterationPosition($iterationPosition);
     
         $this->entityManager->persist($massFetchIteration);
+        $this->entityManager->flush();
+    }
+
+    private function fetchChannelData(Channel $channel)
+    {
+        $channelData = (new ChannelData())
+            ->setFetchedDate(new DateTime())
+            ->setChannel($channel)
+            ->setVideosCount($this->resultsIteration->channelVideosCount);
+
+        $this->entityManager->persist($channelData);
         $this->entityManager->flush();
     }
 }

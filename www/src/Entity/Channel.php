@@ -32,9 +32,16 @@ class Channel
     #[ORM\OneToMany(targetEntity: Video::class, mappedBy: 'channel')]
     private Collection $videos;
 
+    /**
+     * @var Collection<int, ChannelData>
+     */
+    #[ORM\OneToMany(targetEntity: ChannelData::class, mappedBy: 'channel')]
+    private Collection $channelData;
+
     public function __construct()
     {
         $this->videos = new ArrayCollection();
+        $this->channelData = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -102,6 +109,36 @@ class Channel
             // set the owning side to null (unless already changed)
             if ($video->getChannel() === $this) {
                 $video->setChannel(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ChannelData>
+     */
+    public function getChannelData(): Collection
+    {
+        return $this->channelData;
+    }
+
+    public function addChannelData(ChannelData $channelData): static
+    {
+        if (!$this->channelData->contains($channelData)) {
+            $this->channelData->add($channelData);
+            $channelData->setChannel($this);
+        }
+
+        return $this;
+    }
+
+    public function removeChannelData(ChannelData $channelData): static
+    {
+        if ($this->channelData->removeElement($channelData)) {
+            // set the owning side to null (unless already changed)
+            if ($channelData->getChannel() === $this) {
+                $channelData->setChannel(null);
             }
         }
 
