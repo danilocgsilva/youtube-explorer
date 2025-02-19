@@ -20,6 +20,9 @@ class MassFetchIteration
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nextPageToken = null;
 
+    #[ORM\ManyToOne(inversedBy: 'massFetchIterations')]
+    private ?MassFetchJob $massFetchJob = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -45,6 +48,18 @@ class MassFetchIteration
     public function setNextPageToken(?string $nextPageToken): static
     {
         $this->nextPageToken = $nextPageToken;
+
+        return $this;
+    }
+
+    public function getMassFetchJob(): ?MassFetchJob
+    {
+        return $this->massFetchJob;
+    }
+
+    public function setMassFetchJob(?MassFetchJob $massFetchJob): static
+    {
+        $this->massFetchJob = $massFetchJob;
 
         return $this;
     }

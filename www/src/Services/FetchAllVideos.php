@@ -79,8 +79,6 @@ class FetchAllVideos
         return $fetchesResults;
     }
 
-
-
     private function fetchNext(int $pagination, string $uploadsId): bool
     {
         $this->resultsIteration = $this->fetchSinglePagination(
@@ -108,7 +106,8 @@ class FetchAllVideos
     {
         $massFetchIteration = (new MassFetchIteration())
             ->setTime(new DateTime())
-            ->setNextPageToken($this->resultsIteration->nextPageToken);
+            ->setNextPageToken($this->resultsIteration->nextPageToken)
+            ->setMassFetchJob();
         $this->entityManager->persist($massFetchIteration);
         $this->entityManager->flush();
     }

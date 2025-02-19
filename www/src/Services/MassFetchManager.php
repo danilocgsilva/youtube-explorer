@@ -15,6 +15,11 @@ class MassFetchManager
     public function __construct(private EntityManagerInterface $entityManager,)
     {
     }
+
+    public function getMassFetchJob(): MassFetchJob
+    {
+        return $this->massFetchJob;
+    }
     
     public function start(): void
     {
