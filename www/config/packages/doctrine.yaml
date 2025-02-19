@@ -8,6 +8,15 @@ doctrine:
 
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
+
+        types:
+            time_micro: OwlCorp\DoctrineMicrotime\DBAL\Types\TimeMicroType
+            time_immutable_micro: OwlCorp\DoctrineMicrotime\DBAL\Types\TimeImmutableMicroType
+            datetime_micro: OwlCorp\DoctrineMicrotime\DBAL\Types\DateTimeMicroType
+            datetime_immutable_micro: OwlCorp\DoctrineMicrotime\DBAL\Types\DateTimeImmutableMicroType
+            datetimetz_micro: OwlCorp\DoctrineMicrotime\DBAL\Types\DateTimeTzMicroType
+            datetimetz_immutable_micro: OwlCorp\DoctrineMicrotime\DBAL\Types\DateTimeTzImmutableMicroType
+
     orm:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true

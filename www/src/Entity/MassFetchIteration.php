@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\MassFetchIterationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use OwlCorp\DoctrineMicrotime\DBAL\Types\DateTimeMicroType;
 
 #[ORM\Entity(repositoryClass: MassFetchIterationRepository::class)]
 class MassFetchIteration
@@ -23,7 +24,7 @@ class MassFetchIteration
     #[ORM\Column(nullable: true)]
     private ?int $iterationPosition = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: DateTimeMicroType::NAME)]
     private ?\DateTimeInterface $time = null;
 
     public function getId(): ?int

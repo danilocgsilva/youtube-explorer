@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "054708f3b998d891b767816bb93b53b5",
+    "content-hash": "402a1c35b181fac0c02bd361ea8afae6",
     "packages": [
         {
             "name": "doctrine/cache",
@@ -1647,6 +1647,49 @@
                 }
             ],
             "time": "2024-12-05T17:15:07+00:00"
+        },
+        {
+            "name": "owlcorp/doctrine-microseconds-datetime",
+            "version": "v0.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/owlcorp/Doctrine-Microseconds-DateTime.git",
+                "reference": "477966d5b834cec50513b7ebf21d70eca74f6c02"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/owlcorp/Doctrine-Microseconds-DateTime/zipball/477966d5b834cec50513b7ebf21d70eca74f6c02",
+                "reference": "477966d5b834cec50513b7ebf21d70eca74f6c02",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/dbal": ">=v2.5.0",
+                "php": "^7.0|^8.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^1.9",
+                "phpstan/phpstan-deprecation-rules": "^1.0",
+                "phpstan/phpstan-doctrine": "^1.3",
+                "phpstan/phpstan-strict-rules": "^1.4",
+                "roave/security-advisories": "dev-latest",
+                "slevomat/coding-standard": "^8.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "OwlCorp\\DoctrineMicrotime\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Adds support of microseconds time formats to Doctrine ORM & Doctrine DBAL",
+            "support": {
+                "issues": "https://github.com/owlcorp/Doctrine-Microseconds-DateTime/issues",
+                "source": "https://github.com/owlcorp/Doctrine-Microseconds-DateTime/tree/v0.9.0"
+            },
+            "time": "2023-01-10T09:25:24+00:00"
         },
         {
             "name": "psr/cache",
